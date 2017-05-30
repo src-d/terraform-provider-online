@@ -1,22 +1,19 @@
 package online
 
 type Server struct {
-	ID       int    `json:"id"`
-	Offer    string `json:"offer"`
-	Hostname string `json:"hostname"`
-	OS       struct {
-		Name    string `json:"name"`
-		Version string `json:"version"`
-	} `json:"os"`
-	Power               string    `json:"power"`
-	BootMode            string    `json:"boot_mode"`
-	LastReboot          string    `json:"last_reboot"`
-	AntiDDOS            bool      `json:"anti_ddos"`
-	HardwareWatch       bool      `json:"hardware_watch"`
-	ProactiveMonitoring bool      `json:"proactive_monitoring"`
-	Support             string    `json:"support"`
-	Abuse               string    `json:"abuse"`
-	Location            *Location `json:"location"`
+	ID                  int         `json:"id"`
+	Offer               string      `json:"offer"`
+	Hostname            string      `json:"hostname"`
+	OS                  interface{} `json:"os"`
+	Power               string      `json:"power"`
+	BootMode            string      `json:"boot_mode"`
+	LastReboot          string      `json:"last_reboot"`
+	AntiDDOS            bool        `json:"anti_ddos"`
+	HardwareWatch       bool        `json:"hardware_watch"`
+	ProactiveMonitoring bool        `json:"proactive_monitoring"`
+	Support             string      `json:"support"`
+	Abuse               string      `json:"abuse"`
+	Location            *Location   `json:"location"`
 	Network             struct {
 		Public  []string      `json:"ip"`
 		Private []string      `json:"private"`
@@ -45,6 +42,11 @@ type Server struct {
 	BMC struct {
 		SessionKey interface{} `json:"session_key"`
 	} `json:"bmc"`
+}
+
+type OS struct {
+	Name    string `json:"name"`
+	Version string `json:"version"`
 }
 
 type InterfaceType string

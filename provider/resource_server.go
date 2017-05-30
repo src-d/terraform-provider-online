@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/hashicorp/terraform/helper/schema"
@@ -11,12 +12,12 @@ func resourceServer() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceServerCreate,
 		Read:   resourceServerRead,
-		Update: resourceServerRead,
-		Delete: resourceServerRead,
+		Update: resourceServerNone,
+		Delete: resourceServerNone,
 
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
-				Type:     schema.TypeString,
+				Type:     schema.TypeInt,
 				Required: true,
 			},
 			"hostname": &schema.Schema{
@@ -49,6 +50,7 @@ func resourceServer() *schema.Resource {
 			},
 			"public_dns": {
 				Type:     schema.TypeString,
+				Optional: true,
 				Computed: true,
 			},
 			/*"rpn": {
@@ -61,16 +63,34 @@ func resourceServer() *schema.Resource {
 	}
 }
 
-func resourceServerCreate(d *schema.ResourceData, meta interface{}) error {
-	//client := meta.(online.Client)
-	d.SetId("foo")
+func resourceServerNone(d *schema.ResourceData, meta interface{}) error {
 	return nil
+}
+
+func resourceServerCreate(d *schema.ResourceData, meta interface{}) error {
+	id := d.Get("name").(int)
+	d.SetId(string(id))
+
+	s := &online.Server{
+		ID:       id,
+		Hostname: d.Get("hostname").(string),
+	}
+
+	client := meta.(online.Client)
+	if err := client.SetServer(s); err != nil {
+		return err
+	}
+
+	fmt.Println(s)
+
+	return resourceServerRead(d, meta)
 }
 
 func resourceServerRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(online.Client)
 
-	id := d.Get("name").(string)
+	id := d.Get("name").(int)
+	fmt.Println(id)
 	s, err := client.Server(id)
 	if err != nil {
 		return err
