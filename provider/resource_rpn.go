@@ -1,8 +1,6 @@
 package provider
 
 import (
-	"fmt"
-
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/src-d/terraform-provider-online-net/online"
 )
@@ -19,14 +17,18 @@ func resourceRPN() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  online.Standard,
+			},
+			"vlan": {
+				Type:     schema.TypeInt,
+				Required: true,
+			},
+			"status": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"member": &schema.Schema{
 				Type:     schema.TypeList,
@@ -71,15 +73,19 @@ func getRPN(c online.Client, d *schema.ResourceData) (*online.RPNv2, error) {
 
 func updateRPNIfNeeded(c online.Client, prev *online.RPNv2, d *schema.ResourceData) error {
 	rpn := &online.RPNv2{
+		ID:   prev.ID,
 		Name: d.Get("name").(string),
 		Type: online.RPNv2Type(d.Get("type").(string)),
 	}
 
-	for _, m := range d.Get("member").([]interface{}) {
-		value := m.(map[string]interface{})
-		rpn.Members = append(rpn.Members, &online.Member{
-			ID: value["id"].(int),
-		})
+	for _, raw := range d.Get("member").([]interface{}) {
+		value := raw.(map[string]interface{})
+
+		m := &online.Member{}
+		m.Linked.ID = value["id"].(int)
+		m.Vlan = d.Get("vlan").(int)
+
+		rpn.Members = append(rpn.Members, m)
 	}
 
 	return c.SetRPNv2(rpn)
@@ -96,18 +102,27 @@ func resourceRPNRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
+const missingMemberStatus = "MISSING"
+
 func applyRPN(r *online.RPNv2, d *schema.ResourceData) {
 	if r == nil {
 		return
 	}
 
 	d.Set("status", r.Status)
-	for i, m := range d.Get("member").([]interface{}) {
+
+	var output []map[string]interface{}
+	for _, m := range d.Get("member").([]interface{}) {
 		value := m.(map[string]interface{})
 
-		m := r.MemberByID(value["id"].(int))
-		fmt.Println(m, r)
+		value["status"] = missingMemberStatus
+		m := r.MemberByServerID(value["id"].(int))
+		if m != nil {
+			value["status"] = m.Status
+		}
 
-		d.Set(fmt.Sprintf("member.%d.status", i), m.Status)
+		output = append(output, value)
 	}
+
+	d.Set("member", output)
 }

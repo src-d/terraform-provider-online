@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 )
 
@@ -64,6 +65,14 @@ func (c *client) doPUT(target string, values map[string]string) error {
 
 func (c *client) doPOST(target string, values map[string]string) error {
 	return c.doBooleanRequest("POST", target, values)
+}
+
+func (c *client) doPATCH(target string, values map[string]string) error {
+	return c.doBooleanRequest("PATCH", target, values)
+}
+
+func (c *client) doDELETE(target string, values map[string]string) error {
+	return c.doBooleanRequest("DELETE", target, values)
 }
 
 func (c *client) doBooleanRequest(method, target string, values map[string]string) error {
@@ -136,7 +145,6 @@ func (c *client) doSetServerIP(i *Interface) error {
 		"reverse": i.Reverse,
 	})
 
-	fmt.Println(target, err)
 	return err
 }
 
@@ -188,11 +196,18 @@ func (c *client) RPNv2ByName(name string) (*RPNv2, error) {
 }
 
 func (c *client) SetRPNv2(r *RPNv2) error {
+	var err error
 	if r.ID == 0 {
-		return c.doCreateRPNv2(r)
+		err = c.doCreateRPNv2(r)
+	} else {
+		err = c.doUpdateRPNv2(r)
 	}
 
-	return nil
+	if err != nil {
+		return err
+	}
+
+	return c.doSyncVLAN(r)
 }
 
 func (c *client) doCreateRPNv2(r *RPNv2) error {
@@ -202,12 +217,109 @@ func (c *client) doCreateRPNv2(r *RPNv2) error {
 	}
 
 	idsJSON, _ := json.Marshal(ids)
-
-	fmt.Println(string(idsJSON))
 	return c.doPOST(rpnv2EndPoint, map[string]string{
 		"type":        string(r.Type),
 		"description": r.Name,
 		"server_ids":  string(idsJSON),
+	})
+}
+
+func (c *client) doUpdateRPNv2(r *RPNv2) error {
+	prev, err := c.RPNv2(r.ID)
+	if err != nil {
+		return err
+	}
+
+	if r.Type != prev.Type {
+		return fmt.Errorf("rpn type can't changed after creation")
+	}
+
+	var toAdd []int
+	for _, new := range r.Members {
+		if prev.MemberByServerID(new.Linked.ID) != nil {
+			continue
+		}
+
+		toAdd = append(toAdd, new.Linked.ID)
+	}
+
+	if err := c.doAddMembers(r, toAdd); err != nil {
+		return err
+	}
+
+	var toDelete []int
+	for _, old := range prev.Members {
+		if r.MemberByServerID(old.Linked.ID) != nil {
+			continue
+		}
+
+		toDelete = append(toDelete, old.Linked.ID)
+	}
+
+	if err := c.doRemoveMembers(r, toDelete); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *client) doAddMembers(r *RPNv2, serverIDs []int) error {
+	if len(serverIDs) == 0 {
+		return nil
+	}
+
+	target := fmt.Sprintf("%s/%d/addMember", rpnv2EndPoint, r.ID)
+	idsJSON, _ := json.Marshal(serverIDs)
+	err := c.doPOST(target, map[string]string{
+		"server_ids": string(idsJSON),
+	})
+
+	return err
+}
+
+func (c *client) doRemoveMembers(r *RPNv2, serverIDs []int) error {
+	if len(serverIDs) == 0 {
+		return nil
+	}
+
+	target := fmt.Sprintf("%s/%d/removeMember", rpnv2EndPoint, r.ID)
+	idsJSON, _ := json.Marshal(serverIDs)
+	err := c.doDELETE(target, map[string]string{
+		"server_ids": string(idsJSON),
+	})
+
+	return err
+}
+
+func (c *client) doSyncVLAN(r *RPNv2) error {
+	prev, err := c.RPNv2(r.ID)
+	if err != nil {
+		return err
+	}
+
+	for _, new := range r.Members {
+		old := prev.MemberByServerID(new.Linked.ID)
+		if old == nil {
+			continue
+		}
+
+		if new.Vlan != old.Vlan {
+			new.ID = old.ID
+			if err := c.doEditVlanMember(r.ID, new); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func (c *client) doEditVlanMember(groupID int, m *Member) error {
+	target := fmt.Sprintf("%s/%d/editVlanMember/%d", rpnv2EndPoint, groupID, m.ID)
+	fmt.Println(target)
+	return c.doPATCH(target, map[string]string{
+		"vlan_number": strconv.Itoa(m.Vlan),
+		"reset_vlan":  "false",
 	})
 }
 

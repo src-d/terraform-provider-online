@@ -17,9 +17,9 @@ type RPNv2 struct {
 	Members            []*Member `json:"member,omitempty"`
 }
 
-func (r *RPNv2) MemberByID(id int) *Member {
+func (r *RPNv2) MemberByServerID(id int) *Member {
 	for _, m := range r.Members {
-		if m.ID == id {
+		if m.Linked.ID == id {
 			return m
 		}
 	}
