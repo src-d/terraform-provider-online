@@ -1,7 +1,6 @@
 package provider
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/hashicorp/terraform/helper/schema"
@@ -11,8 +10,8 @@ import (
 func resourceServer() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceServerCreate,
+		Update: resourceServerCreate,
 		Read:   resourceServerRead,
-		Update: resourceServerNone,
 		Delete: resourceServerNone,
 
 		Schema: map[string]*schema.Schema{
@@ -68,34 +67,57 @@ func resourceServerNone(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceServerCreate(d *schema.ResourceData, meta interface{}) error {
-	id := d.Get("name").(int)
-	d.SetId(string(id))
-
-	s := &online.Server{
-		ID:       id,
-		Hostname: d.Get("hostname").(string),
-	}
-
-	client := meta.(online.Client)
-	if err := client.SetServer(s); err != nil {
-		return err
-	}
-
-	fmt.Println(s)
-
-	return resourceServerRead(d, meta)
-}
-
-func resourceServerRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(online.Client)
-
-	id := d.Get("name").(int)
-	fmt.Println(id)
-	s, err := client.Server(id)
+	c := meta.(online.Client)
+	s, err := getServer(c, d)
 	if err != nil {
 		return err
 	}
 
+	defer applyServer(s, d)
+	return updateServerIfNeeded(c, s, d)
+}
+
+func updateServerIfNeeded(c online.Client, s *online.Server, d *schema.ResourceData) error {
+	hostname := d.Get("hostname").(string)
+	publicDNS := d.Get("public_dns").(string)
+
+	var changed bool
+	if s.Hostname != hostname {
+		changed = true
+		s.Hostname = hostname
+	}
+
+	ip := s.InterfaceByType(online.Public)
+	if ip != nil && publicDNS != "" && ip.Reverse != publicDNS {
+		changed = true
+		ip.Reverse = publicDNS
+	}
+
+	if !changed {
+		return nil
+	}
+
+	return c.SetServer(s)
+}
+
+func resourceServerRead(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(online.Client)
+	s, err := getServer(client, d)
+	if err != nil {
+		return err
+	}
+
+	applyServer(s, d)
+	return nil
+}
+
+func getServer(c online.Client, d *schema.ResourceData) (*online.Server, error) {
+	id := d.Get("name").(int)
+	d.SetId(string(id))
+	return c.Server(id)
+}
+
+func applyServer(s *online.Server, d *schema.ResourceData) {
 	public := s.InterfaceByType(online.Public)
 	if public != nil {
 		d.Set("public_ip", public.Address)
@@ -109,6 +131,4 @@ func resourceServerRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("rpn", []string{"1", "2"})
-
-	return nil
 }

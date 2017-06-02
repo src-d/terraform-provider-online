@@ -18,6 +18,7 @@ func Provider() terraform.ResourceProvider {
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"online_server": resourceServer(),
+			"online_rpn":    resourceRPN(),
 		},
 		ConfigureFunc: providerConfigure,
 	}
