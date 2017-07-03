@@ -1,6 +1,10 @@
 package provider
 
 import (
+	"time"
+
+	"fmt"
+
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/src-d/terraform-provider-online-net/online"
 )
@@ -10,7 +14,7 @@ func resourceRPN() *schema.Resource {
 		Create: resourceRPNCreate,
 		Update: resourceRPNCreate,
 		Read:   resourceRPNRead,
-		Delete: resourceServerNone,
+		Delete: resourceRPNDelete,
 
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
@@ -49,10 +53,6 @@ func resourceRPN() *schema.Resource {
 	}
 }
 
-func resourceRPNNone(d *schema.ResourceData, meta interface{}) error {
-	return nil
-}
-
 func resourceRPNCreate(d *schema.ResourceData, meta interface{}) error {
 	c := meta.(online.Client)
 	r, err := getRPN(c, d)
@@ -60,8 +60,12 @@ func resourceRPNCreate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	defer applyRPN(r, d)
-	return updateRPNIfNeeded(c, r, d)
+	if err := updateRPNIfNeeded(c, r, d); err != nil {
+		return err
+	}
+
+	applyRPN(r, d)
+	return nil
 }
 
 func getRPN(c online.Client, d *schema.ResourceData) (*online.RPNv2, error) {
@@ -72,8 +76,13 @@ func getRPN(c online.Client, d *schema.ResourceData) (*online.RPNv2, error) {
 }
 
 func updateRPNIfNeeded(c online.Client, prev *online.RPNv2, d *schema.ResourceData) error {
+	var id int
+	if prev != nil {
+		id = prev.ID
+	}
+
 	rpn := &online.RPNv2{
-		ID:   prev.ID,
+		ID:   id,
 		Name: d.Get("name").(string),
 		Type: online.RPNv2Type(d.Get("type").(string)),
 	}
@@ -88,7 +97,7 @@ func updateRPNIfNeeded(c online.Client, prev *online.RPNv2, d *schema.ResourceDa
 		rpn.Members = append(rpn.Members, m)
 	}
 
-	return c.SetRPNv2(rpn)
+	return c.SetRPNv2(rpn, time.Minute)
 }
 
 func resourceRPNRead(d *schema.ResourceData, meta interface{}) error {
@@ -98,6 +107,10 @@ func resourceRPNRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	if r == nil {
+		return nil
+	}
+
 	applyRPN(r, d)
 	return nil
 }
@@ -105,10 +118,7 @@ func resourceRPNRead(d *schema.ResourceData, meta interface{}) error {
 const missingMemberStatus = "MISSING"
 
 func applyRPN(r *online.RPNv2, d *schema.ResourceData) {
-	if r == nil {
-		return
-	}
-
+	fmt.Println(r)
 	d.Set("status", r.Status)
 
 	var output []map[string]interface{}
@@ -125,4 +135,22 @@ func applyRPN(r *online.RPNv2, d *schema.ResourceData) {
 	}
 
 	d.Set("member", output)
+}
+
+func resourceRPNDelete(d *schema.ResourceData, meta interface{}) error {
+	if d.Id() == "" {
+		return nil
+	}
+
+	client := meta.(online.Client)
+	rpn, err := getRPN(client, d)
+	if err != nil {
+		return err
+	}
+
+	if rpn == nil {
+		return nil
+	}
+
+	return client.DeleteRPNv2(rpn.ID, time.Minute)
 }

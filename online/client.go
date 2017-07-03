@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type responseType int
@@ -28,7 +29,8 @@ type Client interface {
 	ListRPNv2() ([]*RPNv2, error)
 	RPNv2(id int) (*RPNv2, error)
 	RPNv2ByName(name string) (*RPNv2, error)
-	SetRPNv2(r *RPNv2) error
+	SetRPNv2(r *RPNv2, wait time.Duration) error
+	DeleteRPNv2(id int, wait time.Duration) error
 }
 
 func NewClient(token string) Client {
@@ -59,6 +61,43 @@ func (c *client) doGET(target string) ([]byte, error) {
 	return c.handleResponse(res)
 }
 
+func (c *client) doPUT(target string, values map[string]string) ([]byte, error) {
+	return c.doRequest("PUT", target, values)
+}
+
+func (c *client) doPOST(target string, values map[string]string) ([]byte, error) {
+	return c.doRequest("POST", target, values)
+}
+
+func (c *client) doPATCH(target string, values map[string]string) ([]byte, error) {
+	return c.doRequest("PATCH", target, values)
+}
+
+func (c *client) doDELETE(target string, values map[string]string) ([]byte, error) {
+	return c.doRequest("DELETE", target, values)
+}
+
+func (c *client) doRequest(method, target string, values map[string]string) ([]byte, error) {
+	form := url.Values{}
+	for k, v := range values {
+		form.Add(k, v)
+	}
+
+	req, err := http.NewRequest(method, target, strings.NewReader(form.Encode()))
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+	resp, err := c.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	return c.handleResponse(resp)
+}
+
 func (c *client) handleResponse(r *http.Response) ([]byte, error) {
 	defer r.Body.Close()
 	body, err := ioutil.ReadAll(r.Body)
@@ -73,70 +112,9 @@ func (c *client) handleResponse(r *http.Response) ([]byte, error) {
 	return nil, decodeErrorResponse(body)
 }
 
-func (c *client) doPUT(target string, values map[string]string) error {
-	return c.doBooleanRequest("PUT", target, values)
-}
-
-func (c *client) doPOST(target string, values map[string]string) error {
-	return c.doBooleanRequest("POST", target, values)
-}
-
-func (c *client) doPATCH(target string, values map[string]string) error {
-	return c.doBooleanRequest("PATCH", target, values)
-}
-
-func (c *client) doDELETE(target string, values map[string]string) error {
-	return c.doBooleanRequest("DELETE", target, values)
-}
-
-func (c *client) doBooleanRequest(method, target string, values map[string]string) error {
-	form := url.Values{}
-	for k, v := range values {
-		form.Add(k, v)
-	}
-
-	req, err := http.NewRequest(method, target, strings.NewReader(form.Encode()))
-	if err != nil {
-		return err
-	}
-
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-
-	resp, err := c.Do(req)
-	if err != nil {
-		return err
-	}
-
-	return c.handleBooleanResponse(resp)
-}
-
-func (c *client) handleBooleanResponse(r *http.Response) error {
-	defer r.Body.Close()
-	b, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return err
-	}
-
-	bool := string(b)
-	switch bool {
-	case "true":
-		return nil
-	case "false":
-		return fmt.Errorf("requested operation has failed")
-	default:
-		e := &ErrorResponse{}
-		err := json.Unmarshal(b, e)
-		if err != nil || e.Message == "" {
-			return fmt.Errorf("unexpected boolean answer from server: %s", bool)
-		}
-
-		return e.Error()
-	}
-}
-
 func (c *client) SetServer(s *Server) error {
 	target := fmt.Sprintf("%s/%d", serverEndPoint, s.ID)
-	err := c.doPUT(target, map[string]string{
+	_, err := c.doPUT(target, map[string]string{
 		"hostname": s.Hostname,
 	})
 
@@ -154,7 +132,7 @@ func (c *client) SetServer(s *Server) error {
 
 func (c *client) doSetServerIP(i *Interface) error {
 	target := fmt.Sprintf("%s/ip/edit", serverEndPoint)
-	err := c.doPOST(target, map[string]string{
+	_, err := c.doPOST(target, map[string]string{
 		"address": i.Address,
 		"reverse": i.Reverse,
 	})
@@ -209,36 +187,46 @@ func (c *client) RPNv2ByName(name string) (*RPNv2, error) {
 	return nil, nil
 }
 
-func (c *client) SetRPNv2(r *RPNv2) error {
+func (c *client) SetRPNv2(r *RPNv2, wait time.Duration) error {
 	var err error
 	if r.ID == 0 {
-		err = c.doCreateRPNv2(r)
+		err = c.doCreateRPNv2(r, wait)
 	} else {
-		err = c.doUpdateRPNv2(r)
+		err = c.doUpdateRPNv2(r, wait)
 	}
 
 	if err != nil {
 		return err
 	}
 
-	return c.doSyncVLAN(r)
+	return c.doSyncVLAN(r, wait)
 }
 
-func (c *client) doCreateRPNv2(r *RPNv2) error {
+func (c *client) doCreateRPNv2(r *RPNv2, wait time.Duration) error {
 	var ids []int
 	for _, m := range r.Members {
-		ids = append(ids, m.ID)
+		ids = append(ids, m.Linked.ID)
 	}
 
 	idsJSON, _ := json.Marshal(ids)
-	return c.doPOST(rpnv2EndPoint, map[string]string{
+	js, err := c.doPOST(rpnv2EndPoint, map[string]string{
 		"type":        string(r.Type),
 		"description": r.Name,
 		"server_ids":  string(idsJSON),
 	})
+
+	if err != nil {
+		return err
+	}
+
+	if err := json.Unmarshal(js, r); err != nil {
+		return err
+	}
+
+	return c.waitRPNv2(r.ID, wait)
 }
 
-func (c *client) doUpdateRPNv2(r *RPNv2) error {
+func (c *client) doUpdateRPNv2(r *RPNv2, wait time.Duration) error {
 	prev, err := c.RPNv2(r.ID)
 	if err != nil {
 		return err
@@ -274,7 +262,7 @@ func (c *client) doUpdateRPNv2(r *RPNv2) error {
 		return err
 	}
 
-	return nil
+	return c.waitRPNv2(r.ID, wait)
 }
 
 func (c *client) doAddMembers(r *RPNv2, serverIDs []int) error {
@@ -284,7 +272,7 @@ func (c *client) doAddMembers(r *RPNv2, serverIDs []int) error {
 
 	target := fmt.Sprintf("%s/%d/addMember", rpnv2EndPoint, r.ID)
 	idsJSON, _ := json.Marshal(serverIDs)
-	err := c.doPOST(target, map[string]string{
+	_, err := c.doPOST(target, map[string]string{
 		"server_ids": string(idsJSON),
 	})
 
@@ -298,14 +286,14 @@ func (c *client) doRemoveMembers(r *RPNv2, serverIDs []int) error {
 
 	target := fmt.Sprintf("%s/%d/removeMember", rpnv2EndPoint, r.ID)
 	idsJSON, _ := json.Marshal(serverIDs)
-	err := c.doDELETE(target, map[string]string{
+	_, err := c.doDELETE(target, map[string]string{
 		"server_ids": string(idsJSON),
 	})
 
 	return err
 }
 
-func (c *client) doSyncVLAN(r *RPNv2) error {
+func (c *client) doSyncVLAN(r *RPNv2, wait time.Duration) error {
 	prev, err := c.RPNv2(r.ID)
 	if err != nil {
 		return err
@@ -325,16 +313,68 @@ func (c *client) doSyncVLAN(r *RPNv2) error {
 		}
 	}
 
-	return nil
+	return c.waitRPNv2(r.ID, wait)
 }
 
 func (c *client) doEditVlanMember(groupID int, m *Member) error {
 	target := fmt.Sprintf("%s/%d/editVlanMember/%d", rpnv2EndPoint, groupID, m.ID)
-	fmt.Println(target)
-	return c.doPATCH(target, map[string]string{
+	_, err := c.doPATCH(target, map[string]string{
 		"vlan_number": strconv.Itoa(m.Vlan),
 		"reset_vlan":  "false",
 	})
+
+	return err
+}
+
+func (c *client) waitRPNv2(id int, wait time.Duration) error {
+	until := time.Now().Add(wait)
+
+	for now := range time.Tick(time.Second) {
+		rpn, err := c.RPNv2(id)
+
+		if err != nil {
+			return err
+		}
+		membersAreActive := true
+		for _, m := range rpn.Members {
+			if m.Status != "ACTIVE" {
+				membersAreActive = true
+			}
+		}
+
+		if membersAreActive && rpn.Status == "ACTIVE" {
+			return nil
+		}
+
+		if now.After(until) {
+			return fmt.Errorf("timeout waiting for RPNv2 changes")
+		}
+	}
+
+	return nil
+}
+
+func (c *client) DeleteRPNv2(id int, wait time.Duration) error {
+	target := fmt.Sprintf("%s/%d", rpnv2EndPoint, id)
+	_, err := c.doDELETE(target, nil)
+	if err != nil {
+		return err
+	}
+
+	err = c.waitRPNv2(id, wait)
+	if err == nil {
+		return nil
+	}
+
+	if er, ok := err.(*ErrorResponse); ok {
+		// 7 is the code of RPNv2 not found error
+		if er.Code == 7 {
+			return nil
+		}
+	}
+
+	return err
+
 }
 
 type ErrorResponse struct {
@@ -372,12 +412,12 @@ func decodeErrorResponse(b []byte) error {
 		e.Code = int(code)
 	}
 
-	return e.Error()
+	return e
 
 Unexpected:
 	return fmt.Errorf("unexpected answer from server: %s", b)
 }
 
-func (e *ErrorResponse) Error() error {
-	return fmt.Errorf("%s (code: %d)", e.Message, e.Code)
+func (e *ErrorResponse) Error() string {
+	return fmt.Sprintf("%s (code: %d)", e.Message, e.Code)
 }
