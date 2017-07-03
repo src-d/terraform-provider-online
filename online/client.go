@@ -10,9 +10,15 @@ import (
 	"strings"
 )
 
+type responseType int
+
 const (
 	serverEndPoint = "https://api.online.net/api/v1/server"
 	rpnv2EndPoint  = "https://api.online.net/api/v1/rpn/v2"
+
+	responseBoolean responseType = iota
+	responseJSON
+	responseString
 )
 
 type Client interface {
@@ -45,18 +51,26 @@ func (c *client) doGET(target string) ([]byte, error) {
 		return nil, err
 	}
 
-	resp, err := c.Do(req)
+	res, err := c.Do(req)
 	if err != nil {
 		return nil, err
 	}
 
-	defer resp.Body.Close()
-	js, err := ioutil.ReadAll(resp.Body)
+	return c.handleResponse(res)
+}
+
+func (c *client) handleResponse(r *http.Response) ([]byte, error) {
+	defer r.Body.Close()
+	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return nil, err
 	}
 
-	return js, nil
+	if r.StatusCode >= 200 && r.StatusCode <= 209 {
+		return body, nil
+	}
+
+	return nil, decodeErrorResponse(body)
 }
 
 func (c *client) doPUT(target string, values map[string]string) error {
@@ -326,6 +340,42 @@ func (c *client) doEditVlanMember(groupID int, m *Member) error {
 type ErrorResponse struct {
 	Code    int
 	Message string `json:"error"`
+}
+
+func decodeErrorResponse(b []byte) error {
+	e := &ErrorResponse{}
+
+	values := map[string]interface{}{}
+	err := json.Unmarshal(b, &values)
+	if err != nil {
+		goto Unexpected
+	}
+
+	if msg, ok := values["error"]; ok {
+		if e.Message, ok = msg.(string); !ok {
+			goto Unexpected
+		}
+	}
+
+	if msg, ok := values["error_description"]; ok {
+		if e.Message, ok = msg.(string); !ok {
+			goto Unexpected
+		}
+	}
+
+	if code, ok := values["code"]; ok {
+		code, ok := code.(float64)
+		if !ok {
+			goto Unexpected
+		}
+
+		e.Code = int(code)
+	}
+
+	return e.Error()
+
+Unexpected:
+	return fmt.Errorf("unexpected answer from server: %s", b)
 }
 
 func (e *ErrorResponse) Error() error {

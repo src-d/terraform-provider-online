@@ -23,10 +23,6 @@ func resourceServer() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"state": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"private_ip": { // no-effect
 				Type:     schema.TypeString,
 				Optional: true,
@@ -52,12 +48,11 @@ func resourceServer() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			/*"rpn": {
+			"rpn": {
 				Type:     schema.TypeList,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem:     &schema.Schema{Type: schema.TypeInt},
 				Computed: true,
 			},
-			*/
 		},
 	}
 }
@@ -73,7 +68,12 @@ func resourceServerCreate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	defer applyServer(s, d)
+	rpns, err := getRPNbyServer(c, d)
+	if err != nil {
+		return err
+	}
+
+	defer applyServer(s, rpns, d)
 	return updateServerIfNeeded(c, s, d)
 }
 
@@ -107,17 +107,42 @@ func resourceServerRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	applyServer(s, d)
+	rpns, err := getRPNbyServer(client, d)
+	if err != nil {
+		return err
+	}
+
+	applyServer(s, rpns, d)
 	return nil
 }
 
 func getServer(c online.Client, d *schema.ResourceData) (*online.Server, error) {
 	id := d.Get("name").(int)
 	d.SetId(string(id))
+
 	return c.Server(id)
 }
 
-func applyServer(s *online.Server, d *schema.ResourceData) {
+func getRPNbyServer(c online.Client, d *schema.ResourceData) ([]int, error) {
+	id := d.Get("name").(int)
+
+	r, err := c.ListRPNv2()
+	if err != nil {
+		return nil, err
+	}
+
+	var list []int
+	for _, rpn := range r {
+		m := rpn.MemberByServerID(id)
+		if m != nil {
+			list = append(list, m.Vlan)
+		}
+	}
+
+	return list, nil
+}
+
+func applyServer(s *online.Server, rpn []int, d *schema.ResourceData) {
 	public := s.InterfaceByType(online.Public)
 	if public != nil {
 		d.Set("public_ip", public.Address)
@@ -130,5 +155,5 @@ func applyServer(s *online.Server, d *schema.ResourceData) {
 		d.Set("private_mac", strings.ToLower(private.MAC))
 	}
 
-	d.Set("rpn", []string{"1", "2"})
+	d.Set("rpn", rpn)
 }
