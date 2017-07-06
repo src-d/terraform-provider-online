@@ -1,9 +1,8 @@
 package provider
 
 import (
-	"time"
-
 	"fmt"
+	"time"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/src-d/terraform-provider-online-net/online"
@@ -12,7 +11,7 @@ import (
 func resourceRPN() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceRPNCreate,
-		Update: resourceRPNCreate,
+		Update: resourceRPNUpdate,
 		Read:   resourceRPNRead,
 		Delete: resourceRPNDelete,
 
@@ -30,111 +29,66 @@ func resourceRPN() *schema.Resource {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
-			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"member": &schema.Schema{
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": &schema.Schema{
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-						"status": &schema.Schema{
-							Type:     schema.TypeString,
-							Computed: true,
-						}},
-				},
-			},
 		},
 	}
 }
 
 func resourceRPNCreate(d *schema.ResourceData, meta interface{}) error {
+	name := d.Get("name").(string)
+
 	c := meta.(online.Client)
-	r, err := getRPN(c, d)
+	rpn, err := c.RPNv2ByName(name)
 	if err != nil {
 		return err
 	}
 
-	if err := updateRPNIfNeeded(c, r, d); err != nil {
-		return err
+	if rpn == nil {
+		rpn = &online.RPNv2{Name: name}
 	}
 
-	applyRPN(r, d)
+	rpn.Type = online.RPNv2Type(d.Get("type").(string))
+
+	d.SetId(rpn.Name)
+	globalCache.addRPN(rpn, d.Get("vlan").(int))
+
 	return nil
 }
 
-func getRPN(c online.Client, d *schema.ResourceData) (*online.RPNv2, error) {
+func resourceRPNUpdate(d *schema.ResourceData, meta interface{}) error {
+	if err := resourceRPNRead(d, meta); err != nil {
+		return err
+	}
+
 	name := d.Get("name").(string)
-	d.SetId(name)
+	cache := globalCache.rpn[name]
 
-	return c.RPNv2ByName(name)
-}
-
-func updateRPNIfNeeded(c online.Client, prev *online.RPNv2, d *schema.ResourceData) error {
-	var id int
-	if prev != nil {
-		id = prev.ID
+	for _, m := range cache.Members {
+		m.VLAN = cache.VLAN
 	}
 
-	rpn := &online.RPNv2{
-		ID:   id,
-		Name: d.Get("name").(string),
-		Type: online.RPNv2Type(d.Get("type").(string)),
-	}
+	cache.Type = online.RPNv2Type(d.Get("type").(string))
 
-	for _, raw := range d.Get("member").([]interface{}) {
-		value := raw.(map[string]interface{})
-
-		m := &online.Member{}
-		m.Linked.ID = value["id"].(int)
-		m.Vlan = d.Get("vlan").(int)
-
-		rpn.Members = append(rpn.Members, m)
-	}
-
-	return c.SetRPNv2(rpn, time.Minute)
+	c := meta.(online.Client)
+	return c.SetRPNv2(&cache.RPNv2, time.Minute)
 }
 
 func resourceRPNRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(online.Client)
-	r, err := getRPN(client, d)
+	name := d.Get("name").(string)
+
+	c := meta.(online.Client)
+	rpn, err := c.RPNv2ByName(name)
 	if err != nil {
 		return err
 	}
 
-	if r == nil {
-		return nil
+	if rpn == nil {
+		return fmt.Errorf("missing RPNv2 group: %q", name)
 	}
 
-	applyRPN(r, d)
+	d.SetId(rpn.Name)
+	globalCache.addRPN(rpn, d.Get("vlan").(int))
+
 	return nil
-}
-
-const missingMemberStatus = "MISSING"
-
-func applyRPN(r *online.RPNv2, d *schema.ResourceData) {
-	fmt.Println(r)
-	d.Set("status", r.Status)
-
-	var output []map[string]interface{}
-	for _, m := range d.Get("member").([]interface{}) {
-		value := m.(map[string]interface{})
-
-		value["status"] = missingMemberStatus
-		m := r.MemberByServerID(value["id"].(int))
-		if m != nil {
-			value["status"] = m.Status
-		}
-
-		output = append(output, value)
-	}
-
-	d.Set("member", output)
 }
 
 func resourceRPNDelete(d *schema.ResourceData, meta interface{}) error {
@@ -142,8 +96,8 @@ func resourceRPNDelete(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	client := meta.(online.Client)
-	rpn, err := getRPN(client, d)
+	c := meta.(online.Client)
+	rpn, err := c.RPNv2ByName(d.Id())
 	if err != nil {
 		return err
 	}
@@ -152,5 +106,5 @@ func resourceRPNDelete(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	return client.DeleteRPNv2(rpn.ID, time.Minute)
+	return c.DeleteRPNv2(rpn.ID, time.Minute)
 }

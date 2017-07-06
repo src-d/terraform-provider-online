@@ -36,5 +36,5 @@ type Member struct {
 		Ref  string `json:"$ref"`
 	} `json:"linked"`
 	Status string `json:"status"`
-	Vlan   int    `json:"vlan"`
+	VLAN   int    `json:"vlan"`
 }

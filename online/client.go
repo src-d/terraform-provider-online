@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -40,6 +41,9 @@ func NewClient(token string) Client {
 type client struct {
 	token string
 	c     *http.Client
+
+	// rpn changes are controlled by a mutex
+	rpnWriteLock sync.Mutex
 }
 
 func (c *client) Do(req *http.Request) (*http.Response, error) {
@@ -113,6 +117,7 @@ func (c *client) handleResponse(r *http.Response) ([]byte, error) {
 }
 
 func (c *client) SetServer(s *Server) error {
+
 	target := fmt.Sprintf("%s/%d", serverEndPoint, s.ID)
 	_, err := c.doPUT(target, map[string]string{
 		"hostname": s.Hostname,
@@ -188,6 +193,9 @@ func (c *client) RPNv2ByName(name string) (*RPNv2, error) {
 }
 
 func (c *client) SetRPNv2(r *RPNv2, wait time.Duration) error {
+	c.rpnWriteLock.Lock()
+	defer c.rpnWriteLock.Unlock()
+
 	var err error
 	if r.ID == 0 {
 		err = c.doCreateRPNv2(r, wait)
@@ -203,7 +211,7 @@ func (c *client) SetRPNv2(r *RPNv2, wait time.Duration) error {
 }
 
 func (c *client) doCreateRPNv2(r *RPNv2, wait time.Duration) error {
-	var ids []int
+	ids := []int{}
 	for _, m := range r.Members {
 		ids = append(ids, m.Linked.ID)
 	}
@@ -305,7 +313,7 @@ func (c *client) doSyncVLAN(r *RPNv2, wait time.Duration) error {
 			continue
 		}
 
-		if new.Vlan != old.Vlan {
+		if new.VLAN != old.VLAN {
 			new.ID = old.ID
 			if err := c.doEditVlanMember(r.ID, new); err != nil {
 				return err
@@ -319,7 +327,7 @@ func (c *client) doSyncVLAN(r *RPNv2, wait time.Duration) error {
 func (c *client) doEditVlanMember(groupID int, m *Member) error {
 	target := fmt.Sprintf("%s/%d/editVlanMember/%d", rpnv2EndPoint, groupID, m.ID)
 	_, err := c.doPATCH(target, map[string]string{
-		"vlan_number": strconv.Itoa(m.Vlan),
+		"vlan_number": strconv.Itoa(m.VLAN),
 		"reset_vlan":  "false",
 	})
 
@@ -331,18 +339,18 @@ func (c *client) waitRPNv2(id int, wait time.Duration) error {
 
 	for now := range time.Tick(time.Second) {
 		rpn, err := c.RPNv2(id)
-
 		if err != nil {
 			return err
 		}
-		membersAreActive := true
+
+		membersUpdating := false
 		for _, m := range rpn.Members {
 			if m.Status != "ACTIVE" {
-				membersAreActive = true
+				membersUpdating = true
 			}
 		}
 
-		if membersAreActive && rpn.Status == "ACTIVE" {
+		if !membersUpdating && rpn.Status == "ACTIVE" {
 			return nil
 		}
 
@@ -355,6 +363,9 @@ func (c *client) waitRPNv2(id int, wait time.Duration) error {
 }
 
 func (c *client) DeleteRPNv2(id int, wait time.Duration) error {
+	c.rpnWriteLock.Lock()
+	defer c.rpnWriteLock.Unlock()
+
 	target := fmt.Sprintf("%s/%d", rpnv2EndPoint, id)
 	_, err := c.doDELETE(target, nil)
 	if err != nil {

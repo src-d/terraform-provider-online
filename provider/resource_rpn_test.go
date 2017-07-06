@@ -13,40 +13,34 @@ func TestResourceRPN(t *testing.T) {
 			ImportStateVerify: true,
 			Config: `
 				resource "online_rpn" "test" {
-					name = "terraform"
-					vlan = "2040"
-					member {
-						id = "105770"
-					}
+					name = "terraform-server-test"
+					vlan = "2242"
 				}
 
 				resource "online_server" "test" {
-			 		name = "105770"
+	 				name = "105770"
 					hostname = "mvp"
+
+					private_interface {
+						rpn = "${online_rpn.test.name}"
+					}
 				}
 			`,
 			Check: resource.ComposeAggregateTestCheckFunc(
-				resource.TestCheckResourceAttrSet("online_rpn.test", "status"),
-				resource.TestCheckResourceAttrSet("online_rpn.test", "member.0.status"),
-				resource.TestCheckResourceAttr("online_server.test", "rpn.0", "2040"),
+				resource.TestCheckResourceAttr("online_server.test", "private_interface.0.vlan_id", "2242"),
 			),
 		}, {
 			ImportStateVerify: true,
 			Config: `
-				resource "online_rpn" "test" {
-					name = "terraform"
-					vlan = "2040"
-					member {
-						id = "105770"
-					}
-					member {
-						id = "105771"
-					}
+				resource "online_server" "test" {
+	 				name = "105770"
+					hostname = "mvp"
+
+					private_interface {}
 				}
 			`,
 			Check: resource.ComposeAggregateTestCheckFunc(
-				resource.TestCheckResourceAttrSet("online_rpn.test", "status"),
-				resource.TestCheckResourceAttr("online_rpn.test", "member.#", "2"),
+				resource.TestCheckResourceAttr("online_server.test", "private_interface.0.vlan_id", "0"),
 			),
 		}},
 	})
