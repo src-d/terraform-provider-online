@@ -1,0 +1,19 @@
+sudo: false
+language: go
+go:
+- 1.11
+script:
+- make test
+- make vet
+before_deploy:
+- make packages
+deploy:
+  provider: releases
+  skip_cleanup: true
+  api_key:
+    secure: mbVV+H0EqwOaZ/bmBn1cV15V0W/xCYEUqFX2ZJLnvo/dunzOEhMoBzu7TVyZgirWCku32rrEBB0VyXkAvbSROc2vL4HJy8nFX0DH2h4zPvsBVNP89lXJONovYUnSAL0ENAzy4MyPmKTQnGe7RrYvc74hmExQwcvV7K2RNESHsn6nltoEYBtDS3232sSeTs3b44v2XhU3OgG6y61+Y4BIGwrfcZTgYjhRVrgmOtw907rlzav+mThzitYlcv30yyy4jfNDdR+CYLAfi8E3ZXh2i6WY+8owlZe7+Bk+QYENbrDpu3y2IYo6VAJEWuaA0c6eYBv72likynxgWOYnIjmgO6l1EW9yBuLryYGOfBmywWlO8vvPBHEa/bqxRysrgIwGUCKAZeHwBYbRicXvFi1g73Eo1VJJj+oSuctOPG0ras5cSrvVbK3R/gExxmZ1HSMUP8OZOg21d3mJabNPoIjswyl3LXhVqV5auwaqlpwykAl7x/Tf7lBqFptO9vwCnSFf0l7wXcgWR2RzpnF09GxB0RGcrEluehEXL5tlc1YGgvvziIlCBDYtiE8bol5aXhpxpPxSEInzuragjrF8hnaSW9FoA42brX90R4OY5xXDiOCd9w8TZMSXOlWWUden8VwzymVp0bB4UoLB1SC4gbuFDA2QK75EhWEQQMeJnAv5bU0=
+  file:
+    - build/terraform-provider-online-net_${TRAVIS_TAG}_darwin_amd64.tar.gz
+    - build/terraform-provider-online-net_${TRAVIS_TAG}_linux_amd64.tar.gz
+  on:
+    tags: true
