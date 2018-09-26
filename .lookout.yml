@@ -1,0 +1,8 @@
+analyzers:
+  - name: Dummy
+    disabled: true
+  - name: gometalint-analyzer
+    settings:
+      linters:
+        - name: lll
+          maxLen: 120
