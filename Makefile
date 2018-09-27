@@ -36,14 +36,14 @@ else
     ifeq ($(UNAME_S),Darwin)
         SYSTEM_OS := darwin
     endif
-    UNAME_P := $(shell uname -p)
-    ifeq ($(UNAME_P),x86_64)
+    UNAME_M := $(shell uname -m)
+    ifeq ($(UNAME_M),x86_64)
         SYSTEM_ARCH := amd64
     endif
-    ifneq ($(filter %86,$(UNAME_P)),)
+    ifneq ($(filter %86,$(UNAME_M)),)
         SYSTEM_ARCH := i386
     endif
-    ifneq ($(filter arm%,$(UNAME_P)),)
+    ifneq ($(filter arm%,$(UNAME_M)),)
         SYSTEM_ARCH := arm
     endif
 endif
@@ -54,7 +54,8 @@ build: fmtcheck
 	go build -v .
 
 local-install: build
-	@sh -c "mv ./terraform-provider-online-net ~/.terraform.d/plugins/$(SYSTEM_OS)_$(SYSTEM_ARCH)/"
+	mkdir -p ~/.terraform.d/plugins/$(SYSTEM_OS)_$(SYSTEM_ARCH)/; \
+	mv ./terraform-provider-online-net ~/.terraform.d/plugins/$(SYSTEM_OS)_$(SYSTEM_ARCH)/
 
 test: fmtcheck
 	go test -i $(TEST) || exit 1
