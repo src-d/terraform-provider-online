@@ -14,10 +14,47 @@ ifneq ($(origin TRAVIS_TAG), undefined)
 	VERSION := $(TRAVIS_TAG)
 endif
 
+SYSTEM_ARCH ?= amd64
+SYSTEM_OS ?= linux
+ifeq ($(OS),Windows_NT)
+    SYSTEM_OS := windows
+    ifeq ($(PROCESSOR_ARCHITEW6432),AMD64)
+        SYSTEM_ARCH := amd64
+    else
+        ifeq ($(PROCESSOR_ARCHITECTURE),AMD64)
+            SYSTEM_ARCH := amd64
+        endif
+        ifeq ($(PROCESSOR_ARCHITECTURE),x86)
+            SYSTEM_ARCH := i386
+        endif
+    endif
+else
+    UNAME_S := $(shell uname -s)
+    ifeq ($(UNAME_S),Linux)
+        SYSTEM_OS := linux
+    endif
+    ifeq ($(UNAME_S),Darwin)
+        SYSTEM_OS := darwin
+    endif
+    UNAME_P := $(shell uname -p)
+    ifeq ($(UNAME_P),x86_64)
+        SYSTEM_ARCH := amd64
+    endif
+    ifneq ($(filter %86,$(UNAME_P)),)
+        SYSTEM_ARCH := i386
+    endif
+    ifneq ($(filter arm%,$(UNAME_P)),)
+        SYSTEM_ARCH := arm
+    endif
+endif
+
 default: build
 
 build: fmtcheck
 	go build -v .
+
+local-install: build
+	@sh -c "mv ./terraform-provider-online-net ~/.terraform.d/plugins/$(SYSTEM_OS)_$(SYSTEM_ARCH)/"
 
 test: fmtcheck
 	go test -i $(TEST) || exit 1
