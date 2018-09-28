@@ -6,10 +6,22 @@ import (
 
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/src-d/terraform-provider-online-net/online/mock"
 )
 
-var providers = map[string]terraform.ResourceProvider{
-	"online": Provider(),
+var testProviders = map[string]terraform.ResourceProvider{}
+
+var onlineClientMock = new(mock.OnlineClientMock)
+
+func init() {
+	// creating the provider with a mocked online.net api client
+	provider := Provider().(*schema.Provider)
+	provider.ConfigureFunc = providerConfigureMock
+	testProviders["online"] = provider
+}
+
+func providerConfigureMock(d *schema.ResourceData) (interface{}, error) {
+	return onlineClientMock, nil
 }
 
 func TestProvider(t *testing.T) {
