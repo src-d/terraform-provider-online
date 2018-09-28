@@ -59,3 +59,15 @@ func (o *OnlineClientMock) DeleteRPNv2(id int, wait time.Duration) error {
 	args := o.Called(id, wait)
 	return args.Error(0)
 }
+
+// BootRescueMode is a mock call
+func (o *OnlineClientMock) BootRescueMode(serverID int, image string) (*online.RescueCredentials, error) {
+	args := o.Called(serverID, image)
+	return args.Get(0).(*online.RescueCredentials), args.Error(1)
+}
+
+// BootNormalMode is a mock call
+func (o *OnlineClientMock) BootNormalMode(serverID int) error {
+	args := o.Called(serverID)
+	return args.Error(0)
+}
