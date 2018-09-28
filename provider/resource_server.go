@@ -18,7 +18,7 @@ func resourceServer() *schema.Resource {
 		Delete: resourceServerNone,
 
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"server_id": &schema.Schema{
 				Type:     schema.TypeInt,
 				Required: true,
 			},
@@ -200,7 +200,7 @@ func resourceServerRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	id := d.Get("name").(int)
+	id := d.Get("server_id").(int)
 	rpns, err := getRPNbyServer(client, id)
 	if err != nil {
 		return err
@@ -211,7 +211,7 @@ func resourceServerRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func getServer(c online.Client, d *schema.ResourceData) (*online.Server, error) {
-	id := d.Get("name").(int)
+	id := d.Get("server_id").(int)
 	d.SetId(string(id))
 
 	return c.Server(id)

@@ -13,7 +13,7 @@ func TestResourceServer(t *testing.T) {
 			ImportStateVerify: true,
 			Config: `
 				resource "online_server" "test" {
-	 				name = "105770"
+					server_id = "105770"
 					hostname = "mvp"
 				}
 			`,
@@ -39,7 +39,7 @@ func TestResourceServerRPNAdd(t *testing.T) {
 				}
 
 				resource "online_server" "test" {
-	 				name = "105770"
+					server_id = "105770"
 					hostname = "mvp"
 
 					private_interface {
@@ -70,7 +70,7 @@ func TestResourceServerRPNAdd(t *testing.T) {
 				}
 
 				resource "online_server" "test" {
-	 				name = "105770"
+					server_id = "105770"
 					hostname = "mvp"
 
 					private_interface {
@@ -109,7 +109,7 @@ func TestResourceServerRPNDelete(t *testing.T) {
 				}
 
 				resource "online_server" "test" {
-	 				name = "105770"
+					server_id = "105770"
 					hostname = "mvp"
 
 					private_interface {
@@ -135,14 +135,14 @@ func TestResourceServerRPNDelete(t *testing.T) {
 				}
 
 				resource "online_server" "test" {
-	 				name = "105770"
+					server_id = "105770"
 					hostname = "mvp"
 
 					private_interface {}
 				}
 
 				resource "online_server" "foo" {
-	 				name = "105771"
+					server_id = "105771"
 					hostname = "mvp"
 
 					private_interface {
