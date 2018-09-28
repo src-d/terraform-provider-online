@@ -27,6 +27,9 @@ type Client interface {
 	Server(id int) (*Server, error)
 	SetServer(s *Server) error
 
+	BootRescueMode(serverID int, image string) (*RescueCredentials, error)
+	BootNormalMode(serverID int) error
+
 	ListRPNv2() ([]*RPNv2, error)
 	RPNv2(id int) (*RPNv2, error)
 	RPNv2ByName(name string) (*RPNv2, error)
