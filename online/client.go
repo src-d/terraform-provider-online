@@ -262,6 +262,10 @@ func (c *client) doUpdateRPNv2(r *RPNv2, wait time.Duration) error {
 		return err
 	}
 
+	if err := c.waitRPNv2(r.ID, wait); err != nil {
+		return err
+	}
+
 	var toDelete []int
 	for _, old := range prev.Members {
 		if r.MemberByServerID(old.Linked.ID) != nil {
@@ -323,10 +327,14 @@ func (c *client) doSyncVLAN(r *RPNv2, wait time.Duration) error {
 			if err := c.doEditVlanMember(r.ID, new); err != nil {
 				return err
 			}
+
+			if err := c.waitRPNv2(r.ID, wait); err != nil {
+				return err
+			}
 		}
 	}
 
-	return c.waitRPNv2(r.ID, wait)
+	return nil
 }
 
 func (c *client) doEditVlanMember(groupID int, m *Member) error {
