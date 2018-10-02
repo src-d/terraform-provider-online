@@ -13,7 +13,7 @@ func init() {
 
 func TestResourceReverseHostname(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		Providers:  testProviders,
+		Providers:  testMockProviders,
 		IsUnitTest: true,
 		Steps: []resource.TestStep{
 			{
@@ -34,7 +34,7 @@ func TestResourceReverseHostname(t *testing.T) {
 
 func TestResourceReverseHostnameAcceptance(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		Providers:  testProviders,
+		Providers:  testAccProviders,
 		IsUnitTest: false,
 		Steps: []resource.TestStep{
 			{
