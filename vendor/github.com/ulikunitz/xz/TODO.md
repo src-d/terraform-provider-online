@@ -277,7 +277,7 @@ almost all files from lzma.
 Removed only a TODO item. 
 
 However in Francesco Campoy's presentation "Go for Javaneros
-(Javaïstes?)" is the the idea that using an embedded field E, all the
+(Javaïstes?)" is the idea that using an embedded field E, all the
 methods of E will be defined on T. If E is an interface T satisfies E.
 
 https://talks.golang.org/2014/go4java.slide#51

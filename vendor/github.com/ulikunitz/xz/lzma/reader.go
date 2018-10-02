@@ -52,7 +52,7 @@ func NewReader(lzma io.Reader) (r *Reader, err error) {
 }
 
 // NewReader creates a new reader for an LZMA stream in the classic
-// format. The function reads and verifies the the header of the LZMA
+// format. The function reads and verifies the header of the LZMA
 // stream.
 func (c ReaderConfig) NewReader(lzma io.Reader) (r *Reader, err error) {
 	if err = c.Verify(); err != nil {

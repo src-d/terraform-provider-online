@@ -486,7 +486,7 @@ func ParseFile(filename string) (*Netrc, error) {
 	return Parse(fd)
 }
 
-// Parse parses from the the Reader r as a netrc file and returns the set of
+// Parse parses from the Reader r as a netrc file and returns the set of
 // machine information and macros defined in it. The ``default'' machine,
 // which is intended to be used when no machine name matches, is identified
 // by an empty machine name. There can be only one ``default'' machine.

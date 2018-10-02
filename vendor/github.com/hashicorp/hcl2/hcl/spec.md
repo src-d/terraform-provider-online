@@ -497,7 +497,7 @@ producing an unknown value of the target type.
 
 Conversion of any value _to_ the dynamic pseudo-type is a no-op. The result
 is the input value, verbatim. This is the only situation where the conversion
-result value is not of the the given target type.
+result value is not of the given target type.
 
 ### Primitive Type Conversions
 
