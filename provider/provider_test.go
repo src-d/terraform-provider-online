@@ -14,10 +14,14 @@ var testProviders = map[string]terraform.ResourceProvider{}
 var onlineClientMock = new(mock.OnlineClientMock)
 
 func init() {
-	// creating the provider with a mocked online.net api client
-	provider := Provider().(*schema.Provider)
-	provider.ConfigureFunc = providerConfigureMock
-	testProviders["online"] = provider
+	if os.Getenv("TF_ACC") != "1" {
+		// creating the provider with a mocked online.net api client
+		provider := Provider().(*schema.Provider)
+		provider.ConfigureFunc = providerConfigureMock
+		testProviders["online"] = provider
+	} else {
+		testProviders["online"] = Provider()
+	}
 }
 
 func providerConfigureMock(d *schema.ResourceData) (interface{}, error) {
