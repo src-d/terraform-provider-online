@@ -10,7 +10,7 @@ import (
 func TestDataRescueImage(t *testing.T) {
 	onlineClientMock.On("GetRescueImages", 123).Return([]string{"ubuntu-18.04-amd64", "darwin-9-armhf"}, nil)
 	resource.Test(t, resource.TestCase{
-		Providers:  testProviders,
+		Providers:  testMockProviders,
 		IsUnitTest: true,
 		Steps: []resource.TestStep{
 			{
