@@ -10,7 +10,7 @@ import (
 
 const TokenEnvVar = "ONLINE_TOKEN"
 
-// globalCache keeps the the internal implate types generated  by the different
+// globalCache keeps the internal implate types generated  by the different
 // data resources with the goal to be reused by the other resources. The key of
 // the maps are the name of resource.
 var globalCache = newCache()

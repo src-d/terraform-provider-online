@@ -525,7 +525,7 @@ func interpolationFuncPathExpand() ast.Function {
 	}
 }
 
-// interpolationFuncCeil returns the the least integer value greater than or equal to the argument
+// interpolationFuncCeil returns the least integer value greater than or equal to the argument
 func interpolationFuncCeil() ast.Function {
 	return ast.Function{
 		ArgTypes:   []ast.Type{ast.TypeFloat},
