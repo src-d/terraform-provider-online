@@ -8,7 +8,7 @@ import (
 
 func TestResourceServer(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		Providers: testProviders,
+		Providers: testAccProviders,
 		Steps: []resource.TestStep{{
 			ImportStateVerify: true,
 			Config: `
@@ -29,7 +29,7 @@ func TestResourceServer(t *testing.T) {
 
 func TestResourceServerRPNAdd(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		Providers: testProviders,
+		Providers: testAccProviders,
 		Steps: []resource.TestStep{{
 			ImportStateVerify: true,
 			Config: `
@@ -99,7 +99,7 @@ func TestResourceServerRPNAdd(t *testing.T) {
 
 func TestResourceServerRPNDelete(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		Providers: testProviders,
+		Providers: testAccProviders,
 		Steps: []resource.TestStep{{
 			ImportStateVerify: true,
 			Config: `

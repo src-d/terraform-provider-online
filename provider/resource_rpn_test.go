@@ -8,7 +8,7 @@ import (
 
 func TestResourceRPN(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		Providers: testProviders,
+		Providers: testAccProviders,
 		Steps: []resource.TestStep{{
 			ImportStateVerify: true,
 			Config: `
