@@ -71,3 +71,9 @@ func (o *OnlineClientMock) BootNormalMode(serverID int) error {
 	args := o.Called(serverID)
 	return args.Error(0)
 }
+
+// EditReverseHostname is a mock call
+func (o *OnlineClientMock) EditReverseHostname(ip, revere string) error {
+	args := o.Called(ip, revere)
+	return args.Error(0)
+}

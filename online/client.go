@@ -30,6 +30,8 @@ type Client interface {
 	BootRescueMode(serverID int, image string) (*RescueCredentials, error)
 	BootNormalMode(serverID int) error
 
+	EditReverseHostname(ip, revere string) error
+
 	GetRescueImages(serverID int) ([]string, error)
 
 	ListRPNv2() ([]*RPNv2, error)
