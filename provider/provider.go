@@ -14,7 +14,7 @@ func Provider() terraform.ResourceProvider {
 		Schema: map[string]*schema.Schema{
 			"token": &schema.Schema{
 				Type:        schema.TypeString,
-				DefaultFunc: schema.EnvDefaultFunc(TokenEnvVar, ""),
+				DefaultFunc: schema.EnvDefaultFunc(TokenEnvVar, nil),
 				Required:    true,
 				Sensitive:   true,
 				Description: "Online.net private API token, by default the ONLINE_TOKEN environment variable is used.",
