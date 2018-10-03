@@ -55,7 +55,7 @@ build: fmtcheck
 
 local-install: build
 	mkdir -p ~/.terraform.d/plugins/$(SYSTEM_OS)_$(SYSTEM_ARCH)/; \
-	mv ./terraform-provider-online-net ~/.terraform.d/plugins/$(SYSTEM_OS)_$(SYSTEM_ARCH)/
+	mv ./terraform-provider-online ~/.terraform.d/plugins/$(SYSTEM_OS)_$(SYSTEM_ARCH)/
 
 test: fmtcheck
 	go test -i $(TEST) || exit 1
@@ -97,7 +97,7 @@ errcheck:
 test-compile: fmtcheck
 	@if [ "$(TEST)" = "./..." ]; then \
 		echo "ERROR: Set TEST to a specific package. For example,"; \
-		echo "  make test-compile TEST=./terraform-provider-online-net"; \
+		echo "  make test-compile TEST=./terraform-provider-online"; \
 		exit 1; \
 	fi
 	go test -c $(TEST) $(TESTARGS)

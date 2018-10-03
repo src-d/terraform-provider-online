@@ -3,7 +3,7 @@ package mock
 import (
 	"time"
 
-	"github.com/src-d/terraform-provider-online-net/online"
+	"github.com/src-d/terraform-provider-online/online"
 	"github.com/stretchr/testify/mock"
 )
 

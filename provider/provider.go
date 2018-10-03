@@ -3,7 +3,7 @@ package provider
 import (
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
-	"github.com/src-d/terraform-provider-online-net/online"
+	"github.com/src-d/terraform-provider-online/online"
 )
 
 const TokenEnvVar = "ONLINE_TOKEN"

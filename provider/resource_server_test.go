@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/src-d/terraform-provider-online-net/online"
+	"github.com/src-d/terraform-provider-online/online"
 )
 
 func setupMock() {

@@ -6,7 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
-	"github.com/src-d/terraform-provider-online-net/online/mock"
+	"github.com/src-d/terraform-provider-online/online/mock"
 )
 
 var testAccProviders = map[string]terraform.ResourceProvider{}

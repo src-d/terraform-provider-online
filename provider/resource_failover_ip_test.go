@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform/terraform"
-	"github.com/src-d/terraform-provider-online-net/online"
+	"github.com/src-d/terraform-provider-online/online"
 
 	"github.com/hashicorp/terraform/helper/resource"
 )
