@@ -32,6 +32,10 @@ type Client interface {
 
 	GetRescueImages(serverID int) ([]string, error)
 
+	EditFailoverIP(source, destination string) error
+	GenerateMACFailoverIP(address, macType string) (string, error)
+	DeleteMACFailoverIP(address string) error
+
 	ListRPNv2() ([]*RPNv2, error)
 	RPNv2(id int) (*RPNv2, error)
 	RPNv2ByName(name string) (*RPNv2, error)

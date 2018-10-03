@@ -21,8 +21,9 @@ func Provider() terraform.ResourceProvider {
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"online_server": resourceServer(),
-			"online_rpnv2":  resourceRPNv2(),
+			"online_server":      resourceServer(),
+			"online_rpnv2":       resourceRPNv2(),
+			"online_failover_ip": resourceFailoverIP(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"online_rescue_image": dataRescueImage(),

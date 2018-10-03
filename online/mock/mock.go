@@ -71,3 +71,21 @@ func (o *OnlineClientMock) BootNormalMode(serverID int) error {
 	args := o.Called(serverID)
 	return args.Error(0)
 }
+
+// EditFailoverIP is a mock call
+func (o *OnlineClientMock) EditFailoverIP(source, destination string) error {
+	args := o.Called(source, destination)
+	return args.Error(0)
+}
+
+// GenerateMACFailoverIP is a mock call
+func (o *OnlineClientMock) GenerateMACFailoverIP(address, macType string) (string, error) {
+	args := o.Called(address, macType)
+	return args.String(0), args.Error(1)
+}
+
+// DeleteMACFailoverIP is a mock call
+func (o *OnlineClientMock) DeleteMACFailoverIP(address string) error {
+	args := o.Called(address)
+	return args.Error(0)
+}
