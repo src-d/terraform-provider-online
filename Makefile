@@ -116,4 +116,4 @@ packages:
 clean:
 	@rm -rf $(BUILD_PATH)
 
-.PHONY: build test testacc testrace cover vet fmt fmtcheck errcheck test-compile
+.PHONY: build test testrace cover vet fmt fmtcheck errcheck test-compile
