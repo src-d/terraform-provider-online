@@ -1,7 +1,6 @@
 package provider
 
 import (
-	"os"
 	"regexp"
 	"testing"
 
@@ -9,9 +8,7 @@ import (
 )
 
 func TestDataRescueImage(t *testing.T) {
-	os.Setenv("ONLINE_TOKEN", "test-token")
 	onlineClientMock.On("GetRescueImages", 123).Return([]string{"ubuntu-18.04-amd64", "darwin-9-armhf"}, nil)
-
 	resource.Test(t, resource.TestCase{
 		Providers:  testMockProviders,
 		IsUnitTest: true,
@@ -51,29 +48,6 @@ func TestDataRescueImage(t *testing.T) {
 					}
 				`,
 				ExpectError: regexp.MustCompile(`No image found for requirements`),
-			},
-		},
-	})
-
-	os.Setenv("ONLINE_TOKEN", "")
-}
-
-func TestDataRescueImageMissingOnlineToken(t *testing.T) {
-	os.Setenv("ONLINE_TOKEN", "")
-
-	resource.Test(t, resource.TestCase{
-		Providers:  testMockProviders,
-		IsUnitTest: true,
-		Steps: []resource.TestStep{
-			{
-				ImportStateVerify: false,
-				Config: `
-					data "online_rescue_image" "test" {
-						name_filter = "fedora"
-						server = 123
-					}
-				`,
-				ExpectError: regexp.MustCompile(`config is invalid: provider.online: "token": required field is not set`),
 			},
 		},
 	})
