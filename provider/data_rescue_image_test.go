@@ -52,3 +52,38 @@ func TestDataRescueImage(t *testing.T) {
 		},
 	})
 }
+
+func TestDataRescueImageAcceptance(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		Providers:  testAccProviders,
+		IsUnitTest: false,
+		Steps: []resource.TestStep{
+			{
+				ImportStateVerify: false,
+				Config: `
+				data "online_rescue_image" "test" {
+	 				name = "ubuntu-18.04_amd64"
+					server = 105711
+				}
+			`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("data.online_rescue_image.test", "name", "ubuntu-18.04_amd64"),
+					resource.TestCheckResourceAttr("data.online_rescue_image.test", "image", "ubuntu-18.04_amd64"),
+				),
+			},
+			{
+				ImportStateVerify: false,
+				Config: `
+				data "online_rescue_image" "test" {
+	 				name_filter = "ubuntu-18.04"
+					server = 105711
+				}
+			`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("data.online_rescue_image.test", "name_filter", "ubuntu-18.04"),
+					resource.TestCheckResourceAttr("data.online_rescue_image.test", "image", "ubuntu-18.04_amd64"),
+				),
+			},
+		},
+	})
+}
