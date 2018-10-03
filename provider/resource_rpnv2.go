@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/src-d/terraform-provider-online-net/online"
+	"github.com/src-d/terraform-provider-online/online"
 )
 
 func resourceRPNv2() *schema.Resource {

@@ -14,24 +14,24 @@ Requirements
 Building The Provider
 ---------------------
 
-Clone repository to: `$GOPATH/src/github.com/src-d/terraform-provider-online-net`
+Clone repository to: `$GOPATH/src/github.com/src-d/terraform-provider-online`
 
 ```sh
 $ mkdir -p $GOPATH/src/github.com/scr-d; cd $GOPATH/src/github.com/src-d
-$ git clone git@github.com:src-d/terraform-provider-online-net
+$ git clone git@github.com:src-d/terraform-provider-online
 ```
 
 Enter the provider directory and build the provider
 
 ```sh
-$ cd $GOPATH/src/github.com/src-d/terraform-provider-online-net
+$ cd $GOPATH/src/github.com/src-d/terraform-provider-online
 $ make build
 ```
 
 To install it in your home directory to test the provifer
 
 ```sh
-$ cd $GOPATH/src/github.com/src-d/terraform-provider-online-net
+$ cd $GOPATH/src/github.com/src-d/terraform-provider-online
 $ make local-install
 ```
 
@@ -50,7 +50,7 @@ To compile the provider, run `make build`. This will build the provider and put 
 ```sh
 $ make build
 ...
-$ $GOPATH/bin/terraform-provider-online-net
+$ $GOPATH/bin/terraform-provider-online
 ...
 ```
 
