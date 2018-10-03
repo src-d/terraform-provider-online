@@ -4,161 +4,119 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/src-d/terraform-provider-online-net/online"
 )
 
-func TestResourceServer(t *testing.T) {
+func setupMock() {
+	onlineClientMock.On("SetServer", &online.Server{
+		Hostname: "mock",
+		IP: []*online.Interface{
+			&online.Interface{
+				Address: "1.2.3.4",
+				MAC:     "aa:bb:cc:dd:ee:ff",
+				Reverse: "my.dns.address",
+				Type:    online.Public,
+			},
+			&online.Interface{
+				Address: "10.2.3.4",
+				MAC:     "00:bb:cc:dd:ee:ff",
+				Type:    online.Private,
+			},
+		},
+	}).Return(nil)
+	onlineClientMock.On("Server", 123).Return(&online.Server{
+		IP: []*online.Interface{
+			&online.Interface{
+				Address: "1.2.3.4",
+				MAC:     "aa:bb:cc:dd:ee:ff",
+				Reverse: "my.dns.address",
+				Type:    online.Public,
+			},
+			&online.Interface{
+				Address: "10.2.3.4",
+				MAC:     "00:bb:cc:dd:ee:ff",
+				Type:    online.Private,
+			},
+		},
+	}, nil)
+}
+
+func TestResourceServerUnit(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers:  testMockProviders,
+		IsUnitTest: true,
 		Steps: []resource.TestStep{{
 			ImportStateVerify: true,
+			PreConfig:         setupMock,
 			Config: `
 				resource "online_server" "test" {
-					server_id = "105770"
-					hostname = "mvp"
+					server_id = 123
+					hostname = "mock"
 				}
 			`,
 			Check: resource.ComposeAggregateTestCheckFunc(
+				resource.TestCheckResourceAttr("online_server.test", "hostname", "mock"),
+				resource.TestCheckResourceAttr("online_server.test", "server_id", "123"),
 				resource.TestCheckResourceAttr("online_server.test", "public_interface.#", "1"),
-				resource.TestCheckResourceAttrSet("online_server.test", "public_interface.0.address"),
-				resource.TestCheckResourceAttrSet("online_server.test", "public_interface.0.mac"),
-				resource.TestCheckResourceAttrSet("online_server.test", "public_interface.0.dns"),
+				resource.TestCheckResourceAttr("online_server.test", "public_interface.0.address", "1.2.3.4"),
+				resource.TestCheckResourceAttr("online_server.test", "public_interface.0.mac", "aa:bb:cc:dd:ee:ff"),
+				resource.TestCheckResourceAttr("online_server.test", "public_interface.0.dns", "my.dns.address"),
+				resource.TestCheckResourceAttr("online_server.test", "private_interface.#", "1"),
+				resource.TestCheckResourceAttr("online_server.test", "private_interface.0.address", "10.2.3.4"),
+				resource.TestCheckResourceAttr("online_server.test", "private_interface.0.mac", "00:bb:cc:dd:ee:ff"),
 			),
 		}},
 	})
 }
 
-func TestResourceServerRPNAdd(t *testing.T) {
+func TestResourceServerAcceptance(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
-		Steps: []resource.TestStep{{
-			ImportStateVerify: true,
-			Config: `
-				resource "online_rpn" "test" {
-					name = "terraform-server-test"
-					vlan = "2242"
-				}
-
+		Steps: []resource.TestStep{
+			{
+				ImportStateVerify: true,
+				Config: `
 				resource "online_server" "test" {
-					server_id = "105770"
-					hostname = "mvp"
-
-					private_interface {
-						rpn = "${online_rpn.test.name}"
+					server_id = 105711
+					hostname  = "new-stg-worker-13"
+					public_interface {
+						dns = "terraform-provider-online-test-01.srcd.run."
 					}
 				}
 			`,
-			Check: resource.ComposeAggregateTestCheckFunc(
-				resource.TestCheckResourceAttr("online_server.test", "public_interface.#", "1"),
-				resource.TestCheckResourceAttrSet("online_server.test", "public_interface.0.address"),
-				resource.TestCheckResourceAttrSet("online_server.test", "public_interface.0.mac"),
-				resource.TestCheckResourceAttrSet("online_server.test", "public_interface.0.dns"),
-				resource.TestCheckResourceAttr("online_server.test", "private_interface.#", "1"),
-				resource.TestCheckResourceAttrSet("online_server.test", "private_interface.0.mac"),
-				resource.TestCheckResourceAttr("online_server.test", "private_interface.0.vlan_id", "2242"),
-			),
-		}, {
-			ImportStateVerify: true,
-			Config: `
-				resource "online_rpn" "test" {
-					name = "terraform-server-test"
-					vlan = "2242"
-				}
-
-				resource "online_rpn" "test_alt" {
-					name = "terraform-server-test_alt"
-					vlan = "2243"
-				}
-
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("online_server.test", "hostname", "new-stg-worker-13"),
+					resource.TestCheckResourceAttr("online_server.test", "server_id", "105711"),
+					resource.TestCheckResourceAttr("online_server.test", "public_interface.#", "1"),
+					resource.TestCheckResourceAttr("online_server.test", "public_interface.0.address", "163.172.75.177"),
+					resource.TestCheckResourceAttr("online_server.test", "public_interface.0.mac", "14:18:77:51:90:00"),
+					resource.TestCheckResourceAttr("online_server.test", "public_interface.0.dns", "terraform-provider-online-test-01.srcd.run."),
+					resource.TestCheckResourceAttr("online_server.test", "private_interface.#", "1"),
+					resource.TestCheckResourceAttr("online_server.test", "private_interface.0.mac", "a0:36:9f:b3:e9:ec"),
+				),
+			},
+			{
+				ImportStateVerify: true,
+				Config: `
 				resource "online_server" "test" {
-					server_id = "105770"
-					hostname = "mvp"
-
-					private_interface {
-						rpn = "${online_rpn.test.name}"
-					}
-
-					private_interface {
-						rpn = "${online_rpn.test_alt.name}"
+					server_id = 105711
+					hostname  = "stg-worker-13"
+					public_interface {
+						dns = "worker-13.infra.pipeline.staging.srcd.host."
 					}
 				}
 			`,
-			Check: resource.ComposeAggregateTestCheckFunc(
-				resource.TestCheckResourceAttr("online_server.test", "public_interface.#", "1"),
-				resource.TestCheckResourceAttrSet("online_server.test", "public_interface.0.address"),
-				resource.TestCheckResourceAttrSet("online_server.test", "public_interface.0.mac"),
-				resource.TestCheckResourceAttrSet("online_server.test", "public_interface.0.dns"),
-				resource.TestCheckResourceAttr("online_server.test", "private_interface.#", "2"),
-				resource.TestCheckResourceAttrSet("online_server.test", "private_interface.0.mac"),
-				resource.TestCheckResourceAttr("online_server.test", "private_interface.0.vlan_id", "2242"),
-				resource.TestCheckResourceAttrSet("online_server.test", "private_interface.1.mac"),
-				resource.TestCheckResourceAttr("online_server.test", "private_interface.1.vlan_id", "2243"),
-			),
-		}},
-	})
-}
-
-func TestResourceServerRPNDelete(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
-		Steps: []resource.TestStep{{
-			ImportStateVerify: true,
-			Config: `
-				resource "online_rpn" "test" {
-					name = "terraform-server-test"
-					vlan = "2242"
-				}
-
-				resource "online_server" "test" {
-					server_id = "105770"
-					hostname = "mvp"
-
-					private_interface {
-						rpn = "${online_rpn.test.name}"
-					}
-				}
-			`,
-			Check: resource.ComposeAggregateTestCheckFunc(
-				resource.TestCheckResourceAttr("online_server.test", "public_interface.#", "1"),
-				resource.TestCheckResourceAttrSet("online_server.test", "public_interface.0.address"),
-				resource.TestCheckResourceAttrSet("online_server.test", "public_interface.0.mac"),
-				resource.TestCheckResourceAttrSet("online_server.test", "public_interface.0.dns"),
-				resource.TestCheckResourceAttr("online_server.test", "private_interface.#", "1"),
-				resource.TestCheckResourceAttrSet("online_server.test", "private_interface.0.mac"),
-				resource.TestCheckResourceAttr("online_server.test", "private_interface.0.vlan_id", "2242"),
-			),
-		}, {
-			ImportStateVerify: true,
-			Config: `
-				resource "online_rpn" "test" {
-					name = "terraform-server-test"
-					vlan = "2242"
-				}
-
-				resource "online_server" "test" {
-					server_id = "105770"
-					hostname = "mvp"
-
-					private_interface {}
-				}
-
-				resource "online_server" "foo" {
-					server_id = "105771"
-					hostname = "mvp"
-
-					private_interface {
-						rpn = "${online_rpn.test.name}"
-					}
-				}
-			`,
-			Check: resource.ComposeAggregateTestCheckFunc(
-				resource.TestCheckResourceAttr("online_server.test", "public_interface.#", "1"),
-				resource.TestCheckResourceAttrSet("online_server.test", "public_interface.0.address"),
-				resource.TestCheckResourceAttrSet("online_server.test", "public_interface.0.mac"),
-				resource.TestCheckResourceAttrSet("online_server.test", "public_interface.0.dns"),
-				resource.TestCheckResourceAttr("online_server.test", "private_interface.#", "1"),
-				resource.TestCheckResourceAttrSet("online_server.test", "private_interface.0.mac"),
-				resource.TestCheckResourceAttr("online_server.test", "private_interface.0.vlan_id", "0"),
-			),
-		}},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("online_server.test", "hostname", "stg-worker-13"),
+					resource.TestCheckResourceAttr("online_server.test", "server_id", "105711"),
+					resource.TestCheckResourceAttr("online_server.test", "public_interface.#", "1"),
+					resource.TestCheckResourceAttr("online_server.test", "public_interface.0.address", "163.172.75.177"),
+					resource.TestCheckResourceAttr("online_server.test", "public_interface.0.mac", "14:18:77:51:90:00"),
+					resource.TestCheckResourceAttr("online_server.test", "public_interface.0.dns", "worker-13.infra.pipeline.staging.srcd.host."),
+					resource.TestCheckResourceAttr("online_server.test", "private_interface.#", "1"),
+					resource.TestCheckResourceAttr("online_server.test", "private_interface.0.mac", "a0:36:9f:b3:e9:ec"),
+				),
+			},
+		},
 	})
 }
