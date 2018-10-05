@@ -27,15 +27,14 @@ func resourceServer() *schema.Resource {
 				Description: "server hostname",
 			},
 			"public_interface": &schema.Schema{
-				Type:        schema.TypeList,
+				Type:        schema.TypeMap,
 				Optional:    true,
 				Computed:    true,
-				MaxItems:    1,
 				Elem:        resourceInterface(),
 				Description: "Public interface properties",
 			},
 			"private_interface": &schema.Schema{
-				Type:        schema.TypeList,
+				Type:        schema.TypeMap,
 				Optional:    true,
 				Computed:    true,
 				Elem:        resourceInterface(),
@@ -94,7 +93,7 @@ func updateServerIfNeeded(c online.Client, s *online.Server, d *schema.ResourceD
 		s.Hostname = hostname
 	}
 
-	publicDNS := d.Get("public_interface.0.dns").(string)
+	publicDNS := d.Get("public_interface.dns").(string)
 	ip := s.InterfaceByType(online.Public)
 	if ip != nil && publicDNS != "" && ip.Reverse != publicDNS {
 		changed = true
@@ -127,23 +126,23 @@ func getServer(c online.Client, d *schema.ResourceData) (*online.Server, error) 
 }
 
 func applyServer(s *online.Server, d *schema.ResourceData) {
-	var public, private []map[string]interface{}
+	var public, private map[string]interface{}
 
 	for _, iface := range s.IP {
 		switch iface.Type {
 		case online.Public:
-			public = append(public, map[string]interface{}{
+			public = map[string]interface{}{
 				"mac":     strings.ToLower(iface.MAC),
 				"dns":     iface.Reverse,
 				"address": iface.Address,
-			})
+			}
 
 		case online.Private:
-			private = append(private, map[string]interface{}{
+			private = map[string]interface{}{
 				"mac":     strings.ToLower(iface.MAC),
 				"dns":     iface.Reverse,
 				"address": iface.Address,
-			})
+			}
 		}
 	}
 
