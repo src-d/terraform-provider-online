@@ -18,7 +18,7 @@ Partial name match example
 ```HCL
 data "online_rescue_image" "example" {
     name_filter = "rescue-image-partial-"
-    server ="${online_server.example_server.id}"
+    server      ="${online_server.example_server.id}"
 }
 
 ## Argument Reference
