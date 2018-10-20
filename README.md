@@ -17,7 +17,7 @@ Building The Provider
 Clone repository to: `$GOPATH/src/github.com/src-d/terraform-provider-online`
 
 ```sh
-$ mkdir -p $GOPATH/src/github.com/scr-d; cd $GOPATH/src/github.com/src-d
+$ mkdir -p $GOPATH/src/github.com/src-d; cd $GOPATH/src/github.com/src-d
 $ git clone git@github.com:src-d/terraform-provider-online
 ```
 
