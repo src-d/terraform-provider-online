@@ -67,3 +67,8 @@ In order to run the full suite of Acceptance tests, run `make testacc`.
 ```sh
 $ make testacc
 ```
+
+## License
+
+Mozilla Public License Version 2.0, see [LICENSE](/LICENSE)
+
