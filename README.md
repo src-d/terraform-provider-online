@@ -28,14 +28,14 @@ $ cd $GOPATH/src/github.com/src-d/terraform-provider-online
 $ make build
 ```
 
-To install it in your home directory to test the provifer
+To install it in your home directory to test the provider
 
 ```sh
 $ cd $GOPATH/src/github.com/src-d/terraform-provider-online
 $ make local-install
 ```
 
-Using the provider
+Using the Provider
 ------------------
 
 *To do: add documentation*
