@@ -41,3 +41,16 @@ func (c *client) DeleteMACFailoverIP(address string) error {
 
 	return nil
 }
+
+func (c *client) SetReverseFailoverIP(address, reverse string) error {
+	target := fmt.Sprintf("%s/server/edit", serverEndPoint)
+	_, err := c.doPOST(target, map[string]string{
+		"ip":      address,
+		"reverse": reverse,
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
