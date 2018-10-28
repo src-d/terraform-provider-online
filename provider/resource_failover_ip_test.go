@@ -4,10 +4,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 	"github.com/src-d/terraform-provider-online/online"
-
-	"github.com/hashicorp/terraform/helper/resource"
 )
 
 func init() {
@@ -15,6 +14,7 @@ func init() {
 	onlineClientMock.On("EditFailoverIP", "127.0.0.1", "").Return(nil)
 	onlineClientMock.On("GenerateMACFailoverIP", "127.0.0.1", "kvm").Return("ma:ac:te:st", nil)
 	onlineClientMock.On("DeleteMACFailoverIP", "127.0.0.1").Return(nil)
+	onlineClientMock.On("SetReverseFailoverIP", "127.0.0.1", "localhost").Return(nil)
 	onlineClientMock.On("Server", 1234).Return(&online.Server{
 		IP: []*online.Interface{
 			&online.Interface{
@@ -66,6 +66,19 @@ func TestResourceFailoverIP(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("online_failover_ip.test", "ip", "127.0.0.1"),
 					resource.TestCheckResourceAttr("online_failover_ip.test", "mac", "ma:ac:te:st"),
+				),
+			},
+			{
+				ImportStateVerify: false,
+				Config: `
+				resource "online_failover_ip" "test" {
+	 				"ip" = "127.0.0.1"
+					"hostname" = "localhost"
+				}
+			`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("online_failover_ip.test", "ip", "127.0.0.1"),
+					resource.TestCheckResourceAttr("online_failover_ip.test", "hostname", "localhost"),
 				),
 			},
 		},

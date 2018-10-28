@@ -89,3 +89,9 @@ func (o *OnlineClientMock) DeleteMACFailoverIP(address string) error {
 	args := o.Called(address)
 	return args.Error(0)
 }
+
+// SetReverseFailoverIP is a mock call
+func (o *OnlineClientMock) SetReverseFailoverIP(address, reverse string) error {
+	args := o.Called(address, reverse)
+	return args.Error(0)
+}
