@@ -15,6 +15,7 @@ func init() {
 	onlineClientMock.On("GenerateMACFailoverIP", "127.0.0.1", "kvm").Return("ma:ac:te:st", nil)
 	onlineClientMock.On("DeleteMACFailoverIP", "127.0.0.1").Return(nil)
 	onlineClientMock.On("SetReverseFailoverIP", "127.0.0.1", "localhost").Return(nil)
+	onlineClientMock.On("SetReverseFailoverIP", "127.0.0.1", "false").Return(nil)
 	onlineClientMock.On("Server", 1234).Return(&online.Server{
 		IP: []*online.Interface{
 			&online.Interface{

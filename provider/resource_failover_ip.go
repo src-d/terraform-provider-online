@@ -127,6 +127,7 @@ func resourceFailoverIPDelete(d *schema.ResourceData, meta interface{}) error {
 	ip := d.Get("ip").(string)
 	_, macExists := d.GetOkExists("mac")
 	c := meta.(online.Client)
+	_, hostnameExists := d.GetOkExists("hostname")
 
 	if macExists {
 		err := c.DeleteMACFailoverIP(ip)
@@ -134,6 +135,13 @@ func resourceFailoverIPDelete(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 		d.Set("mac", "")
+	}
+
+	if hostnameExists {
+		err := c.SetReverseFailoverIP(ip, "false")
+		if err != nil {
+			return err
+		}
 	}
 
 	err := c.EditFailoverIP(ip, "")
