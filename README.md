@@ -14,25 +14,47 @@ Requirements
 Building The Provider
 ---------------------
 
-Clone repository to: `$GOPATH/src/github.com/src-d/terraform-provider-online`
+Clone repository to: `$GOPATH/src/github.com/src-d/terraform-provider-online`.
 
 ```sh
 $ mkdir -p $GOPATH/src/github.com/src-d; cd $GOPATH/src/github.com/src-d
 $ git clone git@github.com:src-d/terraform-provider-online
 ```
 
-Enter the provider directory and build the provider
+Enter the provider directory and build the provider:
 
 ```sh
 $ cd $GOPATH/src/github.com/src-d/terraform-provider-online
 $ make build
 ```
 
-To install it in your home directory to test the provifer
+To install it in your home directory to test the provider:
 
 ```sh
 $ cd $GOPATH/src/github.com/src-d/terraform-provider-online
 $ make local-install
+```
+
+Installing the provider
+-----------------------
+
+### Installation from binaries (recommended)
+
+The recommended way to install *terraform-provider-online* is use the binary
+distributions from the [Releases](https://github.com/src-d/terraform-provider-online/releases) page. The packages are available for Linux and macOS.
+
+Download and uncompress the latest release for your OS. This example uses the linux binary.
+
+```sh
+$ wget https://github.com/src-d/terraform-provider-online/releases/download/v0.1.0/terraform-provider-online_v0.1.0_linux_amd64.tar.gz
+$ tar -xvf terraform-provider-online*.tar.gz
+```
+
+Now copy the binary to the Terraform's plugins folder (if this is your first plugin maybe it isn't present):
+
+```sh
+$ mkdir -p ~/.terraform.d/plugins/
+$ mv terraform-provider-online*/terraform-provider-online ~/.terraform.d/plugins/
 ```
 
 Using the provider
