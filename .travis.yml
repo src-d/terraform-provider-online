@@ -1,7 +1,7 @@
 sudo: false
 language: go
 go:
-- 1.11
+- 1.12
 go_import_path: github.com/src-d/terraform-provider-online
 script:
 - make test
