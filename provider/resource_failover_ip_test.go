@@ -34,8 +34,8 @@ func TestResourceFailoverIP(t *testing.T) {
 				ImportStateVerify: false,
 				Config: `
 				resource "online_failover_ip" "test" {
-	 				"ip" = "127.0.0.1"
-					"destination_server_ip" = "8.8.8.8"
+	 				ip = "127.0.0.1"
+					destination_server_ip = "8.8.8.8"
 				}
 			`,
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -46,8 +46,8 @@ func TestResourceFailoverIP(t *testing.T) {
 				ImportStateVerify: false,
 				Config: `
 				resource "online_failover_ip" "test" {
-	 				"ip" = "127.0.0.1"
-					"destination_server_id" = "1234"
+	 				ip = "127.0.0.1"
+					destination_server_id = "1234"
 				}
 			`,
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -58,9 +58,9 @@ func TestResourceFailoverIP(t *testing.T) {
 				ImportStateVerify: false,
 				Config: `
 				resource "online_failover_ip" "test" {
-					 "ip" = "127.0.0.1"
-					 "destination_server_ip" = "8.8.8.8"
-					 "generate_mac" = true
+					 ip = "127.0.0.1"
+					 destination_server_ip = "8.8.8.8"
+					 generate_mac = true
 				}
 			`,
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -86,8 +86,8 @@ func TestResourceFailoverIPAcceptance(t *testing.T) {
 				ImportStateVerify: false,
 				Config: `
 						resource "online_failover_ip" "test" {
-			 				"ip" = "51.158.20.2"
-							"destination_server_id" = 105711
+			 				ip = "51.158.20.2"
+							destination_server_id = 105711
 						}
 					`,
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -109,9 +109,9 @@ func TestResourceFailoverIPAcceptance(t *testing.T) {
 				ImportStateVerify: false,
 				Config: `
 				resource "online_failover_ip" "test" {
-					 "ip" = "51.158.20.2"
-					 "destination_server_id" = 105711
-					 "generate_mac" = true
+					 ip = "51.158.20.2"
+					 destination_server_id = 105711
+					 generate_mac = true
 				}
 			`,
 				Check: resource.ComposeAggregateTestCheckFunc(
