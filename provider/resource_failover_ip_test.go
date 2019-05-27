@@ -87,7 +87,7 @@ func TestResourceFailoverIPAcceptance(t *testing.T) {
 				PreConfig: func() {
 					// we are modifying routing tables here
 					// online.net will error if we change these too quickly
-					time.Sleep(10 * time.Second)
+					time.Sleep(30 * time.Second)
 				},
 				ImportStateVerify: false,
 				Config: fmt.Sprintf(`
@@ -101,7 +101,7 @@ func TestResourceFailoverIPAcceptance(t *testing.T) {
 					func(s *terraform.State) error {
 						// we are modifying routing tables here
 						// online.net will error if we change these too quickly
-						time.Sleep(10 * time.Second)
+						time.Sleep(30 * time.Second)
 						return nil
 					},
 				),
@@ -110,7 +110,7 @@ func TestResourceFailoverIPAcceptance(t *testing.T) {
 				PreConfig: func() {
 					// we are modifying routing tables here
 					// online.net will error if we change these too quickly
-					time.Sleep(10 * time.Second)
+					time.Sleep(30 * time.Second)
 				},
 				ImportStateVerify: false,
 				Config: fmt.Sprintf(`
@@ -124,7 +124,7 @@ func TestResourceFailoverIPAcceptance(t *testing.T) {
 					func(s *terraform.State) error {
 						// we are modifying routing tables here
 						// online.net will error if we change these too quickly
-						time.Sleep(10 * time.Second)
+						time.Sleep(30 * time.Second)
 						return nil
 					},
 					resource.TestCheckResourceAttr("online_failover_ip.test", "ip", TestFailoverIP),
