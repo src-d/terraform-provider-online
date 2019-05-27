@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"fmt"
 	"os"
 	"strings"
 	"testing"
@@ -25,9 +26,28 @@ func init() {
 		testAccProviders["online"] = Provider()
 		TestServerID = os.Getenv("ONLINE_SERVER_ID")
 		TestServerID2 = os.Getenv("ONLINE_SERVER_ID_2")
-		TestFailoverIP = os.Getenv("ONILE_FAILVOVER_IP")
-		if token := os.Getenv(TokenEnvVar); token != "" {
-			TestToken = token
+		TestFailoverIP = os.Getenv("ONLINE_FAILVOVER_IP")
+		TestToken = os.Getenv(TokenEnvVar)
+
+		if TestToken == "" {
+			fmt.Println("Need ONLINE_TOKEN to be set")
+			os.Exit(1)
+		}
+		if TestServerID == "" {
+			fmt.Println("Need ONLINE_SERVER_ID to be set")
+			os.Exit(1)
+		}
+		if TestServerID == "" {
+			fmt.Println("Need ONLINE_SERVER_ID to be set")
+			os.Exit(1)
+		}
+		if TestServerID2 == "" {
+			fmt.Println("Need ONLINE_SERVER_ID_2 to be set")
+			os.Exit(1)
+		}
+		if TestFailoverIP == "" {
+			fmt.Println("Need ONLINE_FAILVOVER_IP to be set")
+			os.Exit(1)
 		}
 	}
 
