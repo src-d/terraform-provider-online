@@ -16,12 +16,16 @@ var testMockProviders = map[string]terraform.ResourceProvider{}
 var onlineClientMock = new(mock.OnlineClientMock)
 
 var TestServerID string
+var TestServerID2 string
 var TestToken = "test-token"
+var TestFailoverIP string
 
 func init() {
 	if os.Getenv("TF_ACC") == "1" {
 		testAccProviders["online"] = Provider()
 		TestServerID = os.Getenv("ONLINE_SERVER_ID")
+		TestServerID2 = os.Getenv("ONLINE_SERVER_ID_2")
+		TestFailoverIP = os.Getenv("ONILE_FAILVOVER_IP")
 		if token := os.Getenv(TokenEnvVar); token != "" {
 			TestToken = token
 		}

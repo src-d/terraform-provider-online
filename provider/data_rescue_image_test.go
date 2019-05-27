@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"fmt"
 	"regexp"
 	"testing"
 
@@ -60,12 +61,12 @@ func TestDataRescueImageAcceptance(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ImportStateVerify: false,
-				Config: `
+				Config: fmt.Sprintf(`
 				data "online_rescue_image" "test" {
 	 				name = "ubuntu-18.04_amd64"
-					server = 105711
+					server = %s
 				}
-			`,
+			`, TestServerID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.online_rescue_image.test", "name", "ubuntu-18.04_amd64"),
 					resource.TestCheckResourceAttr("data.online_rescue_image.test", "image", "ubuntu-18.04_amd64"),
@@ -73,12 +74,12 @@ func TestDataRescueImageAcceptance(t *testing.T) {
 			},
 			{
 				ImportStateVerify: false,
-				Config: `
+				Config: fmt.Sprintf(`
 				data "online_rescue_image" "test" {
 	 				name_filter = "ubuntu-18.04"
-					server = 105711
+					server = %s
 				}
-			`,
+			`, TestServerID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.online_rescue_image.test", "name_filter", "ubuntu-18.04"),
 					resource.TestCheckResourceAttr("data.online_rescue_image.test", "image", "ubuntu-18.04_amd64"),

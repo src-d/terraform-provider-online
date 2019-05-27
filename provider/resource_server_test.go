@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/resource"
@@ -73,42 +74,28 @@ func TestResourceServerAcceptance(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ImportStateVerify: true,
-				Config: `
+				Config: fmt.Sprintf(`
 				resource "online_server" "test" {
-					server_id = 105711
+					server_id = %s
 					hostname  = "new-stg-worker-13"
-					public_interface {
-						dns = "terraform-provider-online-test-01.srcd.run."
-					}
 				}
-			`,
+			`, TestServerID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("online_server.test", "hostname", "new-stg-worker-13"),
-					resource.TestCheckResourceAttr("online_server.test", "server_id", "105711"),
-					resource.TestCheckResourceAttr("online_server.test", "public_interface.address", "163.172.75.177"),
-					resource.TestCheckResourceAttr("online_server.test", "public_interface.mac", "14:18:77:51:90:00"),
-					resource.TestCheckResourceAttr("online_server.test", "public_interface.dns", "terraform-provider-online-test-01.srcd.run."),
-					resource.TestCheckResourceAttr("online_server.test", "private_interface.mac", "a0:36:9f:b3:e9:ec"),
+					resource.TestCheckResourceAttr("online_server.test", "server_id", TestServerID),
 				),
 			},
 			{
 				ImportStateVerify: true,
-				Config: `
+				Config: fmt.Sprintf(`
 				resource "online_server" "test" {
-					server_id = 105711
+					server_id = %s
 					hostname  = "stg-worker-13"
-					public_interface {
-						dns = "worker-13.infra.pipeline.staging.srcd.host."
-					}
 				}
-			`,
+			`, TestServerID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("online_server.test", "hostname", "stg-worker-13"),
-					resource.TestCheckResourceAttr("online_server.test", "server_id", "105711"),
-					resource.TestCheckResourceAttr("online_server.test", "public_interface.address", "163.172.75.177"),
-					resource.TestCheckResourceAttr("online_server.test", "public_interface.mac", "14:18:77:51:90:00"),
-					resource.TestCheckResourceAttr("online_server.test", "public_interface.dns", "worker-13.infra.pipeline.staging.srcd.host."),
-					resource.TestCheckResourceAttr("online_server.test", "private_interface.mac", "a0:36:9f:b3:e9:ec"),
+					resource.TestCheckResourceAttr("online_server.test", "server_id", TestServerID),
 				),
 			},
 		},
