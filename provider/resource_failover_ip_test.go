@@ -92,7 +92,7 @@ func TestResourceFailoverIPAcceptance(t *testing.T) {
 						}
 					`, TestFailoverIP, TestServerID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("online_failover_ip.test", "ip", TestFiloverIP),
+					resource.TestCheckResourceAttr("online_failover_ip.test", "ip", TestFailoverIP),
 					func(s *terraform.State) error {
 						// we are modifying routing tables here
 						// online.net will error if we change these too quickly
