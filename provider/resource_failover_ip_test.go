@@ -1,6 +1,8 @@
 package provider
 
 import (
+	"fmt"
+	"os"
 	"testing"
 	"time"
 
@@ -73,6 +75,10 @@ func TestResourceFailoverIP(t *testing.T) {
 }
 
 func TestResourceFailoverIPAcceptance(t *testing.T) {
+	if TestFailoverIP == "" && os.Getenv("TF_ACC") == "1" {
+		t.Fatal("Need ONLINE_FAILOVER_IP to be set")
+		return
+	}
 	resource.Test(t, resource.TestCase{
 		Providers:  testAccProviders,
 		IsUnitTest: false,
@@ -81,21 +87,21 @@ func TestResourceFailoverIPAcceptance(t *testing.T) {
 				PreConfig: func() {
 					// we are modifying routing tables here
 					// online.net will error if we change these too quickly
-					time.Sleep(10 * time.Second)
+					time.Sleep(30 * time.Second)
 				},
 				ImportStateVerify: false,
-				Config: `
+				Config: fmt.Sprintf(`
 						resource "online_failover_ip" "test" {
-			 				ip = "51.158.20.2"
-							destination_server_id = 105711
+			 				ip = "%s"
+							destination_server_id = %s
 						}
-					`,
+					`, TestFailoverIP, TestServerID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("online_failover_ip.test", "ip", "51.158.20.2"),
+					resource.TestCheckResourceAttr("online_failover_ip.test", "ip", TestFailoverIP),
 					func(s *terraform.State) error {
 						// we are modifying routing tables here
 						// online.net will error if we change these too quickly
-						time.Sleep(10 * time.Second)
+						time.Sleep(30 * time.Second)
 						return nil
 					},
 				),
@@ -104,24 +110,24 @@ func TestResourceFailoverIPAcceptance(t *testing.T) {
 				PreConfig: func() {
 					// we are modifying routing tables here
 					// online.net will error if we change these too quickly
-					time.Sleep(10 * time.Second)
+					time.Sleep(30 * time.Second)
 				},
 				ImportStateVerify: false,
-				Config: `
+				Config: fmt.Sprintf(`
 				resource "online_failover_ip" "test" {
-					 ip = "51.158.20.2"
-					 destination_server_id = 105711
+					 ip = "%s"
+					 destination_server_id = %s
 					 generate_mac = true
 				}
-			`,
+			`, TestFailoverIP, TestServerID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					func(s *terraform.State) error {
 						// we are modifying routing tables here
 						// online.net will error if we change these too quickly
-						time.Sleep(10 * time.Second)
+						time.Sleep(30 * time.Second)
 						return nil
 					},
-					resource.TestCheckResourceAttr("online_failover_ip.test", "ip", "51.158.20.2"),
+					resource.TestCheckResourceAttr("online_failover_ip.test", "ip", TestFailoverIP),
 					resource.TestCheckResourceAttrSet("online_failover_ip.test", "mac"),
 				),
 			},

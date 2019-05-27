@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"fmt"
 	"os"
 	"strings"
 	"testing"
@@ -15,12 +16,30 @@ var testMockProviders = map[string]terraform.ResourceProvider{}
 
 var onlineClientMock = new(mock.OnlineClientMock)
 
+var TestServerID string
+var TestServerID2 string
+var TestToken = "test-token"
+var TestFailoverIP string
+
 func init() {
 	if os.Getenv("TF_ACC") == "1" {
 		testAccProviders["online"] = Provider()
+		TestServerID = os.Getenv("ONLINE_SERVER_ID")
+		TestServerID2 = os.Getenv("ONLINE_SERVER_ID_2")
+		TestFailoverIP = os.Getenv("ONLINE_FAILOVER_IP")
+		TestToken = os.Getenv(TokenEnvVar)
+
+		if TestToken == "" {
+			fmt.Println("Need ONLINE_TOKEN to be set")
+			os.Exit(1)
+		}
+		if TestServerID == "" {
+			fmt.Println("Need ONLINE_SERVER_ID to be set")
+			os.Exit(1)
+		}
 	}
 
-	os.Setenv(TokenEnvVar, "test-token")
+	os.Setenv(TokenEnvVar, TestToken)
 
 	// creating the provider with a mocked online.net api client
 	provider := Provider().(*schema.Provider)
@@ -42,7 +61,7 @@ func TestProviderMissingToken(t *testing.T) {
 	os.Setenv(TokenEnvVar, "")
 
 	defer func() {
-		os.Setenv(TokenEnvVar, "test-token")
+		os.Setenv(TokenEnvVar, TestToken)
 	}()
 
 	_, fails := Provider().Validate(&terraform.ResourceConfig{})
@@ -59,10 +78,4 @@ func TestProviderMissingToken(t *testing.T) {
 	if err == nil {
 		t.Fatalf("no error received, but expected: %s", expectedErr)
 	}
-}
-
-var TestServerID string
-
-func init() {
-	TestServerID = os.Getenv("ONLINE_SERVER_ID")
 }
