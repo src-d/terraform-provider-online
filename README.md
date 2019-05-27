@@ -92,7 +92,7 @@ It will look for:
 
 | Environment Variable | Description                                                                  | Example | 
 |----------------------|------------------------------------------------------------------------------|---------|
-| `ONLINE_SERVER_ID`   | ID of a dedicated server (only the numeric part)                             |`46952`  |
+| `ONLINE_SERVER_ID`   | ID of a dedicated server (only the numeric part)                             | `46952` |
 | `ONLINE_TOKEN`       | Online.net auth token received from https://console.online.net/en/api/access |         |
 
 
