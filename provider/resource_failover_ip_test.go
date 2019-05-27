@@ -2,6 +2,7 @@ package provider
 
 import (
 	"fmt"
+	"os"
 	"testing"
 	"time"
 
@@ -74,7 +75,7 @@ func TestResourceFailoverIP(t *testing.T) {
 }
 
 func TestResourceFailoverIPAcceptance(t *testing.T) {
-	if TestFailoverIP == "" {
+	if TestFailoverIP == "" && os.Getenv("TF_ACC") == "1" {
 		fmt.Println("Need ONLINE_FAILVOVER_IP to be set")
 		t.Fatal("Need ONLINE_FAILVOVER_IP to be set")
 		return

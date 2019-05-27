@@ -2,13 +2,14 @@ package provider
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
 func TestResourceRPNv2Acceptance(t *testing.T) {
-	if TestServerID2 == "" {
+	if TestServerID2 == "" && os.Getenv("TF_ACC") == "1" {
 		t.Fatal("Need ONLINE_SERVER_ID_2 to be set")
 		return
 	}
