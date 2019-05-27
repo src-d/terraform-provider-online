@@ -76,8 +76,7 @@ func TestResourceFailoverIP(t *testing.T) {
 
 func TestResourceFailoverIPAcceptance(t *testing.T) {
 	if TestFailoverIP == "" && os.Getenv("TF_ACC") == "1" {
-		fmt.Println("Need ONLINE_FAILVOVER_IP to be set")
-		t.Fatal("Need ONLINE_FAILVOVER_IP to be set")
+		t.Fatal("Need ONLINE_FAILOVER_IP to be set")
 		return
 	}
 	resource.Test(t, resource.TestCase{

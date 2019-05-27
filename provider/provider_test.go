@@ -26,7 +26,7 @@ func init() {
 		testAccProviders["online"] = Provider()
 		TestServerID = os.Getenv("ONLINE_SERVER_ID")
 		TestServerID2 = os.Getenv("ONLINE_SERVER_ID_2")
-		TestFailoverIP = os.Getenv("ONLINE_FAILVOVER_IP")
+		TestFailoverIP = os.Getenv("ONLINE_FAILOVER_IP")
 		TestToken = os.Getenv(TokenEnvVar)
 
 		if TestToken == "" {
