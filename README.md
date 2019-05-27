@@ -86,9 +86,17 @@ In order to run the full suite of Acceptance tests, run `make testacc`.
 
 *Note:* Acceptance tests create real resources, and often cost money to run.
 
+Acceptance tests need an authentication token and an Online.net server which will be used to run the tests against.
+The server will be modified, using a production system is not adviced.
+It will look for:
+
+| Environment Variable | Description              |
+|----------------------|--------------------------|
+| `ONLINE_SERVER_ID`   | ID of a dedicated server |
+| `ONLINE_TOKEN`       | Online.net auth token    |
+
+
 ```sh
-$ export ONLINE_SERVER_ID=(ID of a dedicated server to run tests against)
-$ export ONLINE_TOKEN=(Online.net auth token)
 $ make testacc
 ```
 
