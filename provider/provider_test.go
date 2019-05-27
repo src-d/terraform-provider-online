@@ -37,18 +37,6 @@ func init() {
 			fmt.Println("Need ONLINE_SERVER_ID to be set")
 			os.Exit(1)
 		}
-		if TestServerID == "" {
-			fmt.Println("Need ONLINE_SERVER_ID to be set")
-			os.Exit(1)
-		}
-		if TestServerID2 == "" {
-			fmt.Println("Need ONLINE_SERVER_ID_2 to be set")
-			os.Exit(1)
-		}
-		if TestFailoverIP == "" {
-			fmt.Println("Need ONLINE_FAILVOVER_IP to be set")
-			os.Exit(1)
-		}
 	}
 
 	os.Setenv(TokenEnvVar, TestToken)

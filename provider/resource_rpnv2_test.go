@@ -8,6 +8,10 @@ import (
 )
 
 func TestResourceRPNv2Acceptance(t *testing.T) {
+	if TestServerID2 == "" {
+		t.Fatal("Need ONLINE_SERVER_ID_2 to be set")
+		return
+	}
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
