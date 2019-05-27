@@ -94,7 +94,7 @@ It will look for:
 |----------------------|------------------------------------------------------------------------------|-------------|
 | `ONLINE_SERVER_ID`   | ID of a dedicated server (only the numeric part)                             | `46952`     |
 | `ONLINE_SERVER_ID_2` | ID of a 2nd dedicated server (only the numeric part)                         | `46953`     |
-| `ONILE_FAILVOVER_IP` | An available failover IP                                                     | `81.23.14.1`|
+| `ONLINE_FAILVOVER_IP` | An available failover IP                                                     | `81.23.14.1`|
 | `ONLINE_TOKEN`       | Online.net auth token received from https://console.online.net/en/api/access |             |
 
 ```sh
