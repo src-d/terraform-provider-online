@@ -87,14 +87,15 @@ In order to run the full suite of Acceptance tests, run `make testacc`.
 *Note:* Acceptance tests create real resources, and often cost money to run.
 
 Acceptance tests need an authentication token and an Online.net server which will be used to run the tests against.
-The server will be modified, using a production system is not adviced.
+The server will be modified, using a production system is not adviced. All used servers must support RPNv2.
 It will look for:
 
-| Environment Variable | Description                                                                  | Example | 
-|----------------------|------------------------------------------------------------------------------|---------|
-| `ONLINE_SERVER_ID`   | ID of a dedicated server (only the numeric part)                             | `46952` |
-| `ONLINE_TOKEN`       | Online.net auth token received from https://console.online.net/en/api/access |         |
-
+| Environment Variable | Description                                                                  | Example     | 
+|----------------------|------------------------------------------------------------------------------|-------------|
+| `ONLINE_SERVER_ID`   | ID of a dedicated server (only the numeric part)                             | `46952`     |
+| `ONLINE_SERVER_ID_2` | ID of a 2nd dedicated server (only the numeric part)                         | `46953`     |
+| `ONILE_FAILVOVER_IP` | An available failover IP                                                     | `81.23.14.1`|
+| `ONLINE_TOKEN`       | Online.net auth token received from https://console.online.net/en/api/access |             |
 
 ```sh
 $ make testacc
