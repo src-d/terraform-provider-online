@@ -92,8 +92,8 @@ It will look for:
 
 | Environment Variable | Description              |
 |----------------------|--------------------------|
-| `ONLINE_SERVER_ID`   | ID of a dedicated server |
-| `ONLINE_TOKEN`       | Online.net auth token    |
+| `ONLINE_SERVER_ID`   | ID of a dedicated server (only the numeric part) |
+| `ONLINE_TOKEN`       | Online.net auth token received from https://console.online.net/en/api/access   |
 
 
 ```sh
