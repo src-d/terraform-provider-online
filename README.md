@@ -60,6 +60,18 @@ $ mv terraform-provider-online*/terraform-provider-online ~/.terraform.d/plugins
 Using the provider
 ------------------
 
+Environment Variables
+---------------------
+
+This provider can grab authentication tokens from your environment variable.
+It will look for:
+
+| Environment Variable | Description              |
+|----------------------|--------------------------|
+| `ONLINE_SERVER_ID`   | ID of a dedicated server |
+| `ONLINE_TOKEN`       | Online.net auth token    |
+
+
 *To do: add documentation*
 
 Developing the Provider
