@@ -90,10 +90,10 @@ Acceptance tests need an authentication token and an Online.net server which wil
 The server will be modified, using a production system is not adviced.
 It will look for:
 
-| Environment Variable | Description              |
-|----------------------|--------------------------|
-| `ONLINE_SERVER_ID`   | ID of a dedicated server (only the numeric part) |
-| `ONLINE_TOKEN`       | Online.net auth token received from https://console.online.net/en/api/access   |
+| Environment Variable | Description                                                                  | Example | 
+|----------------------|------------------------------------------------------------------------------|---------|
+| `ONLINE_SERVER_ID`   | ID of a dedicated server (only the numeric part)                             |`46952`  |
+| `ONLINE_TOKEN`       | Online.net auth token received from https://console.online.net/en/api/access |         |
 
 
 ```sh
