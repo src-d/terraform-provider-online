@@ -58,6 +58,11 @@ func resourceFailoverIP() *schema.Resource {
 				Optional:    true,
 				Description: "the generated mac",
 			},
+			"hostname": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "the reverse hostname",
+			},
 		},
 	}
 }
@@ -77,6 +82,7 @@ func resourceFailoverIPCreate(d *schema.ResourceData, meta interface{}) error {
 	serverIPInterface, hasServerIP := d.GetOk("destination_server_ip")
 	generateMac := d.Get("generate_mac").(bool)
 	macType := d.Get("generate_mac_type").(string)
+	hostnameInterface, hasHostname := d.GetOk("hostname")
 
 	dstIP := ""
 
@@ -90,6 +96,14 @@ func resourceFailoverIPCreate(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 		dstIP = server.InterfaceByType(online.Public).Address
+	}
+
+	if hasHostname {
+		hostname := hostnameInterface.(string)
+		err := c.SetReverseFailoverIP(ip, hostname)
+		if err != nil {
+			return err
+		}
 	}
 
 	err := c.EditFailoverIP(ip, dstIP)
@@ -113,6 +127,7 @@ func resourceFailoverIPDelete(d *schema.ResourceData, meta interface{}) error {
 	ip := d.Get("ip").(string)
 	_, macExists := d.GetOkExists("mac")
 	c := meta.(online.Client)
+	_, hostnameExists := d.GetOkExists("hostname")
 
 	if macExists {
 		err := c.DeleteMACFailoverIP(ip)
@@ -122,7 +137,18 @@ func resourceFailoverIPDelete(d *schema.ResourceData, meta interface{}) error {
 		d.Set("mac", "")
 	}
 
+	if hostnameExists {
+		err := c.SetReverseFailoverIP(ip, "false")
+		if err != nil {
+			return err
+		}
+	}
+
 	err := c.EditFailoverIP(ip, "")
+	if err != nil {
+		return err
+	}
+
 	return err
 }
 
@@ -134,6 +160,8 @@ func resourceFailoverIPUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	hasNewServerID := d.HasChange("destination_server_id")
 	hasNewServerIP := d.HasChange("destination_server_ip")
+
+	hasNewHostname := d.HasChange("hostname")
 
 	if hasNewServerID && hasNewServerIP {
 		// we switched here!
@@ -164,6 +192,14 @@ func resourceFailoverIPUpdate(d *schema.ResourceData, meta interface{}) error {
 	} else if hasNewServerIP {
 		dstIP := d.Get("destination_server_ip").(string)
 		err := c.EditFailoverIP(ip, dstIP)
+		if err != nil {
+			return err
+		}
+	}
+
+	if hasNewHostname {
+		hostname := d.Get("hostname").(string)
+		err := c.SetReverseFailoverIP(ip, hostname)
 		if err != nil {
 			return err
 		}
