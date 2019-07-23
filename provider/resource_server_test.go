@@ -27,7 +27,8 @@ func setupMock() {
 		},
 	}).Return(nil)
 	onlineClientMock.On("Server", 123).Return(&online.Server{
-		Hostname: "mock",
+		Hostname:      "mock",
+		InstallStatus: "installed",
 		IP: []*online.Interface{
 			&online.Interface{
 				Address: "1.2.3.4",
@@ -42,6 +43,14 @@ func setupMock() {
 			},
 		},
 	}, nil)
+	onlineClientMock.On("InstallServer", 123, &online.ServerInstall{
+		Hostname:                "mock",
+		OS_ID:                   "101",
+		UserLogin:               "user1",
+		UserPassword:            "pass1",
+		RootPassword:            "rootpass",
+		PartitioningTemplateRef: "81c651de-030b-41f3-8094-36f423375234",
+	}).Return(nil)
 }
 
 func TestResourceServerUnit(t *testing.T) {
@@ -55,6 +64,11 @@ func TestResourceServerUnit(t *testing.T) {
 				resource "online_server" "test" {
 					server_id = 123
 					hostname = "mock"
+					os_id = "101"
+					user_login = "user1"
+					user_password = "pass1"
+					root_password = "rootpass"
+					partitioning_template_ref = "81c651de-030b-41f3-8094-36f423375234"
 				}
 			`,
 			Check: resource.ComposeAggregateTestCheckFunc(
@@ -65,6 +79,7 @@ func TestResourceServerUnit(t *testing.T) {
 				resource.TestCheckResourceAttr("online_server.test", "public_interface.dns", "my.dns.address"),
 				resource.TestCheckResourceAttr("online_server.test", "private_interface.address", "10.2.3.4"),
 				resource.TestCheckResourceAttr("online_server.test", "private_interface.mac", "00:bb:cc:dd:ee:ff"),
+				resource.TestCheckResourceAttr("online_server.test", "status", "installed"),
 			),
 		}},
 	})

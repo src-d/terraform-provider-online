@@ -7,6 +7,7 @@ type Server struct {
 	OS                  interface{} `json:"os"`
 	Power               string      `json:"power"`
 	BootMode            string      `json:"boot_mode"`
+	InstallStatus       string      `json:"install_status"`
 	LastReboot          string      `json:"last_reboot"`
 	AntiDDOS            bool        `json:"anti_ddos"`
 	HardwareWatch       bool        `json:"hardware_watch"`
@@ -42,6 +43,15 @@ type Server struct {
 	BMC struct {
 		SessionKey interface{} `json:"session_key"`
 	} `json:"bmc"`
+}
+
+type ServerInstall struct {
+	Hostname                string `json:"hostname"`
+	OS_ID                   string `json:"os_id"`
+	UserLogin               string `json:"user_login"`
+	UserPassword            string `json:"user_password"`
+	RootPassword            string `json:"root_password"`
+	PartitioningTemplateRef string `json:"partitioning_template_ref"`
 }
 
 type OS struct {

@@ -26,6 +26,7 @@ const (
 type Client interface {
 	Server(id int) (*Server, error)
 	SetServer(s *Server) error
+	InstallServer(id int, s *ServerInstall) error
 
 	BootRescueMode(serverID int, image string) (*RescueCredentials, error)
 	BootNormalMode(serverID int) error
@@ -163,6 +164,20 @@ func (c *client) Server(id int) (*Server, error) {
 
 	s := &Server{}
 	return s, json.Unmarshal(js, s)
+}
+
+func (c *client) InstallServer(id int, s *ServerInstall) error {
+	target := fmt.Sprintf("%s/install/%d", serverEndPoint, id)
+	var req map[string]string
+	inreq, _ := json.Marshal(s)
+	json.Unmarshal(inreq, &req)
+
+	_, err := c.doPOST(target, req)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (c *client) ListRPNv2() ([]*RPNv2, error) {
