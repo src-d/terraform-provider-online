@@ -11,7 +11,7 @@ import (
 func resourceServer() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceServerCreate,
-		Update: resourceServerCreate,
+		Update: resourceServerUpdate,
 		Read:   resourceServerRead,
 		Delete: resourceServerDelete,
 
@@ -71,61 +71,46 @@ func resourceServerDelete(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceServerCreate(d *schema.ResourceData, meta interface{}) error {
+	return resourceServerRead(d, meta)
+}
+
+func resourceServerUpdate(d *schema.ResourceData, meta interface{}) error {
 	c := meta.(online.Client)
-	s, err := getServer(c, d)
-	if err != nil {
-		return err
+	s := &online.Server{
+		ID:       d.Get("server_id").(int),
+		Hostname: d.Get("hostname").(string),
 	}
 
-	if err := updateServerIfNeeded(c, s, d); err != nil {
+	publicDNS := d.Get("public_interface.dns").(string)
+	ip := s.InterfaceByType(online.Public)
+	if ip != nil && publicDNS != "" && ip.Reverse != publicDNS {
+		ip.Reverse = publicDNS
+	}
+
+	if err := c.SetServer(s); err != nil {
 		return err
 	}
 
 	return resourceServerRead(d, meta)
 }
 
-func updateServerIfNeeded(c online.Client, s *online.Server, d *schema.ResourceData) error {
-	hostname := d.Get("hostname").(string)
-
-	var changed bool
-	if s.Hostname != hostname {
-		changed = true
-		s.Hostname = hostname
-	}
-
-	publicDNS := d.Get("public_interface.dns").(string)
-	ip := s.InterfaceByType(online.Public)
-	if ip != nil && publicDNS != "" && ip.Reverse != publicDNS {
-		changed = true
-		ip.Reverse = publicDNS
-	}
-
-	if !changed {
-		return nil
-	}
-
-	return c.SetServer(s)
-}
-
 func resourceServerRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(online.Client)
-	s, err := getServer(client, d)
+	c := meta.(online.Client)
+	id := d.Get("server_id").(int)
+
+	s, err := c.Server(id)
 	if err != nil {
 		return err
 	}
 
-	applyServer(s, d)
+	d.SetId(strconv.Itoa(id))
+	d.Set("hostname", s.Hostname)
+	setIP(s, d)
+
 	return nil
 }
 
-func getServer(c online.Client, d *schema.ResourceData) (*online.Server, error) {
-	id := d.Get("server_id").(int)
-	d.SetId(strconv.Itoa(id))
-
-	return c.Server(id)
-}
-
-func applyServer(s *online.Server, d *schema.ResourceData) {
+func setIP(s *online.Server, d *schema.ResourceData) {
 	var public, private map[string]interface{}
 
 	for _, iface := range s.IP {

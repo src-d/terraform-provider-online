@@ -10,6 +10,7 @@ import (
 
 func setupMock() {
 	onlineClientMock.On("SetServer", &online.Server{
+		ID:       123,
 		Hostname: "mock",
 		IP: []*online.Interface{
 			&online.Interface{
@@ -26,6 +27,7 @@ func setupMock() {
 		},
 	}).Return(nil)
 	onlineClientMock.On("Server", 123).Return(&online.Server{
+		Hostname: "mock",
 		IP: []*online.Interface{
 			&online.Interface{
 				Address: "1.2.3.4",
