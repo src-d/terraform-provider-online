@@ -168,11 +168,21 @@ func (c *client) Server(id int) (*Server, error) {
 
 func (c *client) InstallServer(id int, s *ServerInstall) error {
 	target := fmt.Sprintf("%s/install/%d", serverEndPoint, id)
-	var req map[string]string
-	inreq, _ := json.Marshal(s)
-	json.Unmarshal(inreq, &req)
 
-	_, err := c.doPOST(target, req)
+	keys, err := json.Marshal(s.SSHKeys)
+	if err != nil {
+		return err
+	}
+
+	_, err = c.doPOST(target, map[string]string{
+		"hostname":                  s.Hostname,
+		"os_id":                     s.OS_ID,
+		"user_login":                s.UserLogin,
+		"user_password":             s.UserPassword,
+		"root_password":             s.RootPassword,
+		"partitioning_template_ref": s.PartitioningTemplateRef,
+		"ssh_keys":                  string(keys),
+	})
 	if err != nil {
 		return err
 	}

@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -75,6 +76,14 @@ func resourceServer() *schema.Resource {
 				Description: "UUID of the partitioning template created from " +
 					"https://console.online.net/en/template/partition",
 			},
+			"ssh_keys": &schema.Schema{
+				Type: schema.TypeList,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Optional:    true,
+				Description: "UUID of user's ssh keys",
+			},
 			"status": &schema.Schema{
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -112,6 +121,13 @@ func resourceServerDelete(d *schema.ResourceData, meta interface{}) error {
 
 func resourceServerCreate(d *schema.ResourceData, meta interface{}) error {
 	c := meta.(online.Client)
+
+	t := d.Get("ssh_keys").([]interface{})
+	sshKeys := make([]string, len(t))
+	for i, v := range t {
+		sshKeys[i] = fmt.Sprint(v)
+	}
+
 	s := &online.ServerInstall{
 		Hostname:                d.Get("hostname").(string),
 		OS_ID:                   d.Get("os_id").(string),
@@ -119,6 +135,7 @@ func resourceServerCreate(d *schema.ResourceData, meta interface{}) error {
 		UserPassword:            d.Get("user_password").(string),
 		RootPassword:            d.Get("root_password").(string),
 		PartitioningTemplateRef: d.Get("partitioning_template_ref").(string),
+		SSHKeys:                 sshKeys,
 	}
 	id := d.Get("server_id").(int)
 

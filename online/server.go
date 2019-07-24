@@ -46,12 +46,13 @@ type Server struct {
 }
 
 type ServerInstall struct {
-	Hostname                string `json:"hostname"`
-	OS_ID                   string `json:"os_id"`
-	UserLogin               string `json:"user_login"`
-	UserPassword            string `json:"user_password"`
-	RootPassword            string `json:"root_password"`
-	PartitioningTemplateRef string `json:"partitioning_template_ref"`
+	Hostname                string   `json:"hostname"`
+	OS_ID                   string   `json:"os_id"`
+	UserLogin               string   `json:"user_login"`
+	UserPassword            string   `json:"user_password"`
+	RootPassword            string   `json:"root_password"`
+	PartitioningTemplateRef string   `json:"partitioning_template_ref"`
+	SSHKeys                 []string `json:"ssh_keys"`
 }
 
 type OS struct {

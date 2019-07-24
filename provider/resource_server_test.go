@@ -50,6 +50,10 @@ func setupMock() {
 		UserPassword:            "pass1",
 		RootPassword:            "rootpass",
 		PartitioningTemplateRef: "81c651de-030b-41f3-8094-36f423375234",
+		SSHKeys: []string{
+			"81c651de-030b-41f3-8094-36f423375235",
+			"81c651de-030b-41f3-8094-36f423375236",
+		},
 	}).Return(nil)
 }
 
@@ -69,6 +73,10 @@ func TestResourceServerUnit(t *testing.T) {
 					user_password = "pass1"
 					root_password = "rootpass"
 					partitioning_template_ref = "81c651de-030b-41f3-8094-36f423375234"
+                    ssh_keys = [
+                        "81c651de-030b-41f3-8094-36f423375235",
+                        "81c651de-030b-41f3-8094-36f423375236",
+                    ]
 				}
 			`,
 			Check: resource.ComposeAggregateTestCheckFunc(
