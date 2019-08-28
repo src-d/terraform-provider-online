@@ -20,6 +20,7 @@ var TestServerID string
 var TestServerID2 string
 var TestToken = "test-token"
 var TestFailoverIP string
+var TestSSHUUID1 string
 
 func init() {
 	if os.Getenv("TF_ACC") == "1" {
@@ -27,6 +28,7 @@ func init() {
 		TestServerID = os.Getenv("ONLINE_SERVER_ID")
 		TestServerID2 = os.Getenv("ONLINE_SERVER_ID_2")
 		TestFailoverIP = os.Getenv("ONLINE_FAILOVER_IP")
+		TestSSHUUID1 = os.Getenv("ONLINE_SSH_UUID_1")
 		TestToken = os.Getenv(TokenEnvVar)
 
 		if TestToken == "" {

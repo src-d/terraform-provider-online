@@ -103,3 +103,11 @@ func (s *Server) InterfaceByType(t InterfaceType) *Interface {
 
 	return nil
 }
+
+type SSHKey struct {
+	UUID        string `json:"uuid_ref"`
+	Description string `json:"description"`
+	Fingerprint string `json:"fingerprint"`
+}
+
+type SSHKeys []SSHKey

@@ -17,6 +17,7 @@ type responseType int
 const (
 	serverEndPoint = "https://api.online.net/api/v1/server"
 	rpnv2EndPoint  = "https://api.online.net/api/v1/rpn/v2"
+	userEndPoint   = "https://api.online.net/api/v1/user"
 
 	responseBoolean responseType = iota
 	responseJSON
@@ -43,6 +44,8 @@ type Client interface {
 	RPNv2ByName(name string) (*RPNv2, error)
 	SetRPNv2(r *RPNv2, wait time.Duration) error
 	DeleteRPNv2(id int, wait time.Duration) error
+
+	ListSSHKeys() (*SSHKeys, error)
 }
 
 func NewClient(token string) Client {
@@ -490,4 +493,17 @@ Unexpected:
 
 func (e *ErrorResponse) Error() string {
 	return fmt.Sprintf("%s (code: %d)", e.Message, e.Code)
+}
+
+func (c *client) ListSSHKeys() (*SSHKeys, error) {
+	target := fmt.Sprintf("%s/key/ssh", userEndPoint)
+
+	// XXX: add pagination support
+	js, err := c.doGET(target)
+	if err != nil {
+		return nil, err
+	}
+
+	var keys SSHKeys
+	return &keys, json.Unmarshal(js, &keys)
 }

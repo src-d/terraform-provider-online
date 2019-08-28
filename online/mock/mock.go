@@ -101,3 +101,9 @@ func (o *OnlineClientMock) DeleteMACFailoverIP(address string) error {
 	args := o.Called(address)
 	return args.Error(0)
 }
+
+// ListSSHKeys is a mock call
+func (o *OnlineClientMock) ListSSHKeys() (*online.SSHKeys, error) {
+	args := o.Called()
+	return args.Get(0).(*online.SSHKeys), args.Error(1)
+}
