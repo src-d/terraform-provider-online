@@ -139,7 +139,11 @@ func resourceServerCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 	id := d.Get("server_id").(int)
 
-	if err := c.InstallServer(id, s); err != nil {
+	// XXX: keep backward compat
+	if s.OS_ID == "" && s.UserLogin == "" && s.UserPassword == "" && s.RootPassword == "" &&
+		s.PartitioningTemplateRef == "" && len(s.SSHKeys) == 0 {
+		return resourceServerUpdate(d, meta)
+	} else if err := c.InstallServer(id, s); err != nil {
 		return err
 	}
 
@@ -157,7 +161,7 @@ func resourceServerCreate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	return resourceServerRead(d, meta)
+	return resourceServerUpdate(d, meta)
 }
 
 func waitForServerInstall(c online.Client, id int) resource.StateRefreshFunc {
@@ -177,10 +181,16 @@ func resourceServerUpdate(d *schema.ResourceData, meta interface{}) error {
 		Hostname: d.Get("hostname").(string),
 	}
 
-	publicDNS := d.Get("public_interface.dns").(string)
-	ip := s.InterfaceByType(online.Public)
-	if ip != nil && publicDNS != "" && ip.Reverse != publicDNS {
-		ip.Reverse = publicDNS
+	if publicDNS := d.Get("public_interface.dns").(string); publicDNS != "" {
+		if d.HasChange("public_interface.dns") {
+			r, err := c.Server(s.ID)
+			if err != nil {
+				return err
+			}
+			ip := r.InterfaceByType(online.Public)
+			ip.Reverse = publicDNS
+			s.IP = r.IP
+		}
 	}
 
 	if err := c.SetServer(s); err != nil {

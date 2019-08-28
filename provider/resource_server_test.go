@@ -62,8 +62,9 @@ func TestResourceServerUnit(t *testing.T) {
 		Providers:  testMockProviders,
 		IsUnitTest: true,
 		Steps: []resource.TestStep{{
-			ImportStateVerify: true,
-			PreConfig:         setupMock,
+			ImportStateVerify:  true,
+			PreConfig:          setupMock,
+			ExpectNonEmptyPlan: true,
 			Config: `
 				resource "online_server" "test" {
 					server_id = 123
@@ -77,6 +78,9 @@ func TestResourceServerUnit(t *testing.T) {
                         "81c651de-030b-41f3-8094-36f423375235",
                         "81c651de-030b-41f3-8094-36f423375236",
                     ]
+					public_interface = {
+						dns = "my.dns.address"
+					}
 				}
 			`,
 			Check: resource.ComposeAggregateTestCheckFunc(
