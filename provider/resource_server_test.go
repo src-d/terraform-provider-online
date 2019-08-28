@@ -127,6 +127,25 @@ func TestResourceServerAcceptance(t *testing.T) {
 					resource.TestCheckResourceAttr("online_server.test", "server_id", TestServerID),
 				),
 			},
+			{
+				ImportStateVerify: true,
+				Config: fmt.Sprintf(`
+				resource "online_server" "test" {
+					server_id = %s
+					hostname  = "acceptance-test"
+					os_id = "305"
+					user_login = "user1"
+					user_password = "pass1"
+					root_password = "rootpass"
+					partitioning_template_ref = "%s"
+					ssh_keys = ["%s"]
+				}
+			`, TestServerID, TestTemplateRef, TestSSHUUID1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("online_server.test", "hostname", "acceptance-test"),
+					resource.TestCheckResourceAttr("online_server.test", "status", "installed"),
+				),
+			},
 		},
 	})
 }
