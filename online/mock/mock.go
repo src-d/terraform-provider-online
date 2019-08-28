@@ -30,6 +30,12 @@ func (o *OnlineClientMock) InstallServer(id int, s *online.ServerInstall) error 
 	return args.Error(0)
 }
 
+// ListOperatingSystems is a mock call
+func (o *OnlineClientMock) ListOperatingSystems(id int) (*online.OperatingSystems, error) {
+	args := o.Called(id)
+	return args.Get(0).(*online.OperatingSystems), args.Error(1)
+}
+
 // GetRescueImages is a mock call
 func (o *OnlineClientMock) GetRescueImages(serverID int) ([]string, error) {
 	args := o.Called(serverID)

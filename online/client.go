@@ -27,6 +27,7 @@ type Client interface {
 	Server(id int) (*Server, error)
 	SetServer(s *Server) error
 	InstallServer(id int, s *ServerInstall) error
+	ListOperatingSystems(id int) (*OperatingSystems, error)
 
 	BootRescueMode(serverID int, image string) (*RescueCredentials, error)
 	BootNormalMode(serverID int) error
@@ -188,6 +189,22 @@ func (c *client) InstallServer(id int, s *ServerInstall) error {
 	}
 
 	return nil
+}
+
+func (c *client) ListOperatingSystems(id int) (*OperatingSystems, error) {
+	target := fmt.Sprintf("%s/operatingSystems/%d", serverEndPoint, id)
+
+	js, err := c.doGET(target)
+	if err != nil {
+		return nil, err
+	}
+
+	systems := &OperatingSystems{}
+	err = json.Unmarshal(js, systems)
+	if err != nil {
+		return nil, err
+	}
+	return systems, nil
 }
 
 func (c *client) ListRPNv2() ([]*RPNv2, error) {

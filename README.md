@@ -101,6 +101,13 @@ It will look for:
 $ make testacc
 ```
 
+You can also run a dedicated acceptance test, here an example:
+
+```sh
+$ make test-compile TEST=./provider
+$ ONLINE_TOKEN=<token> ONLINE_SERVER_ID=<id> TF_ACC=1 ./provider.test -test.run TestDataOperatingSystemAcceptance -test.v
+```
+
 ## License
 
 Mozilla Public License Version 2.0, see [LICENSE](/LICENSE)

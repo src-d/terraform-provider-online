@@ -60,6 +60,17 @@ type OS struct {
 	Version string `json:"version"`
 }
 
+type OperatingSystem struct {
+	OS
+	ID        int    `json:"id"`
+	Type      string `json:"type"`
+	Arch      string `json:"arch"`
+	Release   string `json:"release"`
+	EndOfLife string `json:"end_of_life"`
+}
+
+type OperatingSystems []OperatingSystem
+
 type InterfaceType string
 
 const (
