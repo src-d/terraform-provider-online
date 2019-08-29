@@ -7,6 +7,7 @@ type Server struct {
 	OS                  interface{} `json:"os"`
 	Power               string      `json:"power"`
 	BootMode            string      `json:"boot_mode"`
+	InstallStatus       string      `json:"install_status"`
 	LastReboot          string      `json:"last_reboot"`
 	AntiDDOS            bool        `json:"anti_ddos"`
 	HardwareWatch       bool        `json:"hardware_watch"`
@@ -44,10 +45,31 @@ type Server struct {
 	} `json:"bmc"`
 }
 
+type ServerInstall struct {
+	Hostname                string   `json:"hostname"`
+	OS_ID                   string   `json:"os_id"`
+	UserLogin               string   `json:"user_login"`
+	UserPassword            string   `json:"user_password"`
+	RootPassword            string   `json:"root_password"`
+	PartitioningTemplateRef string   `json:"partitioning_template_ref"`
+	SSHKeys                 []string `json:"ssh_keys"`
+}
+
 type OS struct {
 	Name    string `json:"name"`
 	Version string `json:"version"`
 }
+
+type OperatingSystem struct {
+	OS
+	ID        int    `json:"id"`
+	Type      string `json:"type"`
+	Arch      string `json:"arch"`
+	Release   string `json:"release"`
+	EndOfLife string `json:"end_of_life"`
+}
+
+type OperatingSystems []OperatingSystem
 
 type InterfaceType string
 
@@ -81,3 +103,11 @@ func (s *Server) InterfaceByType(t InterfaceType) *Interface {
 
 	return nil
 }
+
+type SSHKey struct {
+	UUID        string `json:"uuid_ref"`
+	Description string `json:"description"`
+	Fingerprint string `json:"fingerprint"`
+}
+
+type SSHKeys []SSHKey

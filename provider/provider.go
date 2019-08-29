@@ -26,7 +26,9 @@ func Provider() terraform.ResourceProvider {
 			"online_failover_ip": resourceFailoverIP(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
-			"online_rescue_image": dataRescueImage(),
+			"online_rescue_image":     dataRescueImage(),
+			"online_operating_system": dataOperatingSystem(),
+			"online_ssh_keys":         dataSSHKeys(),
 		},
 		ConfigureFunc: providerConfigure,
 	}

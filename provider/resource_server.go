@@ -1,9 +1,12 @@
 package provider
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/src-d/terraform-provider-online/online"
 )
@@ -11,7 +14,7 @@ import (
 func resourceServer() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceServerCreate,
-		Update: resourceServerCreate,
+		Update: resourceServerUpdate,
 		Read:   resourceServerRead,
 		Delete: resourceServerDelete,
 
@@ -39,6 +42,52 @@ func resourceServer() *schema.Resource {
 				Computed:    true,
 				Elem:        resourceInterface(),
 				Description: "Private interface properties",
+			},
+			"os_id": &schema.Schema{
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "OS identifier",
+			},
+			"user_login": &schema.Schema{
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "User login",
+			},
+			"user_password": &schema.Schema{
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				ForceNew:    true,
+				Description: "User password",
+			},
+			"root_password": &schema.Schema{
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				ForceNew:    true,
+				Description: "Root password",
+			},
+			"partitioning_template_ref": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Description: "UUID of the partitioning template created from " +
+					"https://console.online.net/en/template/partition",
+			},
+			"ssh_keys": &schema.Schema{
+				Type: schema.TypeList,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Optional:    true,
+				Description: "UUID of user's ssh keys",
+			},
+			"status": &schema.Schema{
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Install status",
 			},
 		},
 	}
@@ -72,60 +121,103 @@ func resourceServerDelete(d *schema.ResourceData, meta interface{}) error {
 
 func resourceServerCreate(d *schema.ResourceData, meta interface{}) error {
 	c := meta.(online.Client)
-	s, err := getServer(c, d)
+
+	t := d.Get("ssh_keys").([]interface{})
+	sshKeys := make([]string, len(t))
+	for i, v := range t {
+		sshKeys[i] = fmt.Sprint(v)
+	}
+
+	s := &online.ServerInstall{
+		Hostname:                d.Get("hostname").(string),
+		OS_ID:                   d.Get("os_id").(string),
+		UserLogin:               d.Get("user_login").(string),
+		UserPassword:            d.Get("user_password").(string),
+		RootPassword:            d.Get("root_password").(string),
+		PartitioningTemplateRef: d.Get("partitioning_template_ref").(string),
+		SSHKeys:                 sshKeys,
+	}
+	id := d.Get("server_id").(int)
+
+	// XXX: keep backward compat
+	if s.OS_ID == "" && s.UserLogin == "" && s.UserPassword == "" && s.RootPassword == "" &&
+		s.PartitioningTemplateRef == "" && len(s.SSHKeys) == 0 {
+		return resourceServerUpdate(d, meta)
+	} else if err := c.InstallServer(id, s); err != nil {
+		return err
+	}
+
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"installing"},
+		Target:     []string{"installed"},
+		Refresh:    waitForServerInstall(c, id),
+		Timeout:    60 * time.Minute,
+		Delay:      1 * time.Second,
+		MinTimeout: 10 * time.Second,
+	}
+
+	_, err := stateConf.WaitForState()
 	if err != nil {
 		return err
 	}
 
-	if err := updateServerIfNeeded(c, s, d); err != nil {
+	return resourceServerUpdate(d, meta)
+}
+
+func waitForServerInstall(c online.Client, id int) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		s, err := c.Server(id)
+		if err != nil {
+			return s, "", err
+		}
+		return s, s.InstallStatus, nil
+	}
+}
+
+func resourceServerUpdate(d *schema.ResourceData, meta interface{}) error {
+	c := meta.(online.Client)
+	s := &online.Server{
+		ID:       d.Get("server_id").(int),
+		Hostname: d.Get("hostname").(string),
+	}
+
+	if publicDNS := d.Get("public_interface.dns").(string); publicDNS != "" {
+		if d.HasChange("public_interface.dns") {
+			r, err := c.Server(s.ID)
+			if err != nil {
+				return err
+			}
+			ip := r.InterfaceByType(online.Public)
+			ip.Reverse = publicDNS
+			s.IP = r.IP
+		}
+	}
+
+	if err := c.SetServer(s); err != nil {
 		return err
 	}
 
 	return resourceServerRead(d, meta)
 }
 
-func updateServerIfNeeded(c online.Client, s *online.Server, d *schema.ResourceData) error {
-	hostname := d.Get("hostname").(string)
-
-	var changed bool
-	if s.Hostname != hostname {
-		changed = true
-		s.Hostname = hostname
-	}
-
-	publicDNS := d.Get("public_interface.dns").(string)
-	ip := s.InterfaceByType(online.Public)
-	if ip != nil && publicDNS != "" && ip.Reverse != publicDNS {
-		changed = true
-		ip.Reverse = publicDNS
-	}
-
-	if !changed {
-		return nil
-	}
-
-	return c.SetServer(s)
-}
-
 func resourceServerRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(online.Client)
-	s, err := getServer(client, d)
+	c := meta.(online.Client)
+	id := d.Get("server_id").(int)
+
+	s, err := c.Server(id)
 	if err != nil {
 		return err
 	}
 
-	applyServer(s, d)
+	d.SetId(strconv.Itoa(id))
+	d.Set("hostname", s.Hostname)
+	setIP(s, d)
+	d.Set("status", s.InstallStatus)
+
 	return nil
 }
 
-func getServer(c online.Client, d *schema.ResourceData) (*online.Server, error) {
-	id := d.Get("server_id").(int)
-	d.SetId(strconv.Itoa(id))
-
-	return c.Server(id)
-}
-
-func applyServer(s *online.Server, d *schema.ResourceData) {
+func setIP(s *online.Server, d *schema.ResourceData) {
 	var public, private map[string]interface{}
 
 	for _, iface := range s.IP {

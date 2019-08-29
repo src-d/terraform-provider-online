@@ -17,6 +17,7 @@ type responseType int
 const (
 	serverEndPoint = "https://api.online.net/api/v1/server"
 	rpnv2EndPoint  = "https://api.online.net/api/v1/rpn/v2"
+	userEndPoint   = "https://api.online.net/api/v1/user"
 
 	responseBoolean responseType = iota
 	responseJSON
@@ -26,6 +27,8 @@ const (
 type Client interface {
 	Server(id int) (*Server, error)
 	SetServer(s *Server) error
+	InstallServer(id int, s *ServerInstall) error
+	ListOperatingSystems(id int) (*OperatingSystems, error)
 
 	BootRescueMode(serverID int, image string) (*RescueCredentials, error)
 	BootNormalMode(serverID int) error
@@ -41,6 +44,8 @@ type Client interface {
 	RPNv2ByName(name string) (*RPNv2, error)
 	SetRPNv2(r *RPNv2, wait time.Duration) error
 	DeleteRPNv2(id int, wait time.Duration) error
+
+	ListSSHKeys() (*SSHKeys, error)
 }
 
 func NewClient(token string) Client {
@@ -163,6 +168,46 @@ func (c *client) Server(id int) (*Server, error) {
 
 	s := &Server{}
 	return s, json.Unmarshal(js, s)
+}
+
+func (c *client) InstallServer(id int, s *ServerInstall) error {
+	target := fmt.Sprintf("%s/install/%d", serverEndPoint, id)
+
+	keys, err := json.Marshal(s.SSHKeys)
+	if err != nil {
+		return err
+	}
+
+	_, err = c.doPOST(target, map[string]string{
+		"hostname":                  s.Hostname,
+		"os_id":                     s.OS_ID,
+		"user_login":                s.UserLogin,
+		"user_password":             s.UserPassword,
+		"root_password":             s.RootPassword,
+		"partitioning_template_ref": s.PartitioningTemplateRef,
+		"ssh_keys":                  string(keys),
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *client) ListOperatingSystems(id int) (*OperatingSystems, error) {
+	target := fmt.Sprintf("%s/operatingSystems/%d", serverEndPoint, id)
+
+	js, err := c.doGET(target)
+	if err != nil {
+		return nil, err
+	}
+
+	systems := &OperatingSystems{}
+	err = json.Unmarshal(js, systems)
+	if err != nil {
+		return nil, err
+	}
+	return systems, nil
 }
 
 func (c *client) ListRPNv2() ([]*RPNv2, error) {
@@ -448,4 +493,17 @@ Unexpected:
 
 func (e *ErrorResponse) Error() string {
 	return fmt.Sprintf("%s (code: %d)", e.Message, e.Code)
+}
+
+func (c *client) ListSSHKeys() (*SSHKeys, error) {
+	target := fmt.Sprintf("%s/key/ssh", userEndPoint)
+
+	// XXX: add pagination support
+	js, err := c.doGET(target)
+	if err != nil {
+		return nil, err
+	}
+
+	var keys SSHKeys
+	return &keys, json.Unmarshal(js, &keys)
 }
